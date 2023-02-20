@@ -1,0 +1,9 @@
+# *
+User-agent: *
+Allow: /
+
+# Host
+Host: game.vercel.app
+
+# Sitemaps
+Sitemap: game.vercel.app/sitemap.xml
