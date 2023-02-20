@@ -1,0 +1,22 @@
+{
+  "name": "@gather-gambit/monorepo",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/davd-ops/gather-gambit.git",
+  "author": "davd-ops",
+  "license": "MIT",
+  "scripts": {
+    "chain": "yarn workspace @gather-gambit/hardhat hardhat node",
+    "deploy": "yarn workspace @gather-gambit/hardhat hardhat run --network localhost scripts/deploy.ts",
+    "test": "yarn workspace @gather-gambit/hardhat test",
+    "compile": "yarn workspace @gather-gambit/hardhat hardhat typechain",
+    "dev": "yarn workspace @gather-gambit/next-app dev",
+    "build": "yarn workspace @gather-gambit/next-app build"
+  },
+  "workspaces": {
+    "packages": [
+      "packages/*"
+    ]
+  },
+  "private": true
+}
