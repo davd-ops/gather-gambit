@@ -9,4 +9,10 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* background-image: url('../public/assets/town.png'); */
+  background-size: contain;
+  background-position: center center;
+  cursor: pointer;
+  background-repeat: no-repeat;
+  background-size: 100%;
 }
