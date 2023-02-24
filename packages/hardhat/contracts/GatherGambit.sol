@@ -107,7 +107,7 @@ contract GatherGambit is ERC721A, Ownable {
         string memory metadata;
 
         if (entity == Entity.Unrevealed) {
-            metadata = string(
+             metadata = string(
                 abi.encodePacked(
                     '{"name": "',
                     "Unrevealed #",
@@ -117,8 +117,9 @@ contract GatherGambit is ERC721A, Ownable {
                     '"}'
                 )
             );
-        } else if (entity == Entity.Gatherer) {
-            metadata = string(
+        } else 
+        if (entity == Entity.Gatherer) {
+             metadata = string(
                 abi.encodePacked(
                     '{"name": "',
                     "Gatherer #",
@@ -128,8 +129,9 @@ contract GatherGambit is ERC721A, Ownable {
                     '"}'
                 )
             );
-        } else if (entity == Entity.Protector) {
-            metadata = string(
+        } else
+        if (entity == Entity.Protector) {
+             metadata = string(
                 abi.encodePacked(
                     '{"name": "',
                     "Protector #",
@@ -139,8 +141,9 @@ contract GatherGambit is ERC721A, Ownable {
                     '"}'
                 )
             );
-        } else if (entity == Entity.Wolf) {
-            metadata = string(
+        } else
+        if (entity == Entity.Wolf) {
+             metadata = string(
                 abi.encodePacked(
                     '{"name": "',
                     "Wolf #",
@@ -195,11 +198,7 @@ contract GatherGambit is ERC721A, Ownable {
                 )
             )
         ) % 100;
-
-        // 15% chance of Wolf
-        if (entityRange < 15) {
-            return Entity.Wolf;
-        }
+        
         // 80% chance of Gatherer
         if (entityRange < 80) {
             return Entity.Gatherer;
@@ -207,6 +206,10 @@ contract GatherGambit is ERC721A, Ownable {
         // 5% chance of Protector
         else if (entityRange < 85) {
             return Entity.Protector;
+        }
+        // 15% chance of Wolf
+        else {
+            return Entity.Wolf;
         }
     }
 
