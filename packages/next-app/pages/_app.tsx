@@ -7,8 +7,10 @@ import { arbitrum, fantom, mainnet, optimism, polygon } from 'wagmi/chains';
 
 import '../styles/globals.css';
 
+import Layout from '@/components/layout/Layout';
+
 // If loading a variable font, you don't need to specify the font weight
-const inter = Press_Start_2P({
+export const inter = Press_Start_2P({
   weight: '400',
   subsets: ['cyrillic'],
 });
@@ -26,7 +28,9 @@ function MyApp({ Component, pageProps }: AppProps) {
     <main className={inter.className}>
       <WagmiConfig client={client}>
         <ConnectKitProvider theme='retro'>
-          <Component {...pageProps} />
+          <Layout>
+            <Component {...pageProps} />
+          </Layout>
         </ConnectKitProvider>
       </WagmiConfig>
     </main>
