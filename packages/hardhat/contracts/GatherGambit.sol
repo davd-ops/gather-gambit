@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.10;
+pragma solidity 0.8.19;
 
 import "erc721a/contracts/ERC721A.sol";
+import "./IGatherGambit.sol";
 // import "@openzeppelin/contracts/token/ERC721/ERC20.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -10,14 +11,17 @@ import "./Base64.sol";
 import "./Images.sol";
 import "hardhat/console.sol";
 
-contract GatherGambit is ERC721A, Ownable {
+/**
+ * @title Gather Gambit
+ * @notice Fully on-chain risk protocol full of game theory and NFTs!
+ * @dev A contract for minting Gather Gambit NFTs.
+ */
+contract GatherGambit is IGatherGambit, ERC721A, Ownable {
     using Strings for uint256;
 
     // ========================================
     //     EVENT & ERROR DEFINITIONS
     // ========================================
-
-    event NewEpoch(uint256 indexed epochId, uint256 indexed revealBlock);
 
     error QueryForNonexistentToken();
 
@@ -25,21 +29,8 @@ contract GatherGambit is ERC721A, Ownable {
     //     VARIABLE DEFINITIONS
     // ========================================
 
-    enum Entity {
-        Unrevealed,
-        Gatherer,
-        Protector,
-        Wolf
-    }
-
-    struct Epoch {
-        uint128 randomness; // The source of randomness for tokens from this epoch
-        uint64 revealBlock; // The block at which this epoch was / is revealed
-        bool committed; // Whether the epoch has been instantiated
-        bool revealed; // Whether the epoch has been revealed
-    }
-
     uint256 private _epochIndex; // The current epoch index
+    address private _stakingContract; // The address of the staking contract
 
     mapping(uint256 => uint256) epochPerToken; // The epoch index of each token
     mapping(uint256 => Epoch) epochPerEpochIndex; // The epoch per each epoch index
@@ -48,7 +39,9 @@ contract GatherGambit is ERC721A, Ownable {
     //    CONSTRUCTOR AND CORE FUNCTIONS
     // ========================================
 
-    constructor() ERC721A("Gather Gambit", "GAMBIT") {}
+    constructor() ERC721A("Gather Gambit", "GAMBIT") {
+
+    }
 
     /**
      * @notice Mints a token.
@@ -101,13 +94,13 @@ contract GatherGambit is ERC721A, Ownable {
      */
     function tokenURI(
         uint256 _tokenId
-    ) public view override returns (string memory) {
+    ) public view override(ERC721A, IGatherGambit) returns (string memory) {
         if (!_exists(_tokenId)) revert QueryForNonexistentToken();
         Entity entity = getEntity(_tokenId);
         string memory metadata;
 
         if (entity == Entity.Unrevealed) {
-             metadata = string(
+            metadata = string(
                 abi.encodePacked(
                     '{"name": "',
                     "Unrevealed #",
@@ -117,9 +110,8 @@ contract GatherGambit is ERC721A, Ownable {
                     '"}'
                 )
             );
-        } else 
-        if (entity == Entity.Gatherer) {
-             metadata = string(
+        } else if (entity == Entity.Gatherer) {
+            metadata = string(
                 abi.encodePacked(
                     '{"name": "',
                     "Gatherer #",
@@ -129,9 +121,8 @@ contract GatherGambit is ERC721A, Ownable {
                     '"}'
                 )
             );
-        } else
-        if (entity == Entity.Protector) {
-             metadata = string(
+        } else if (entity == Entity.Protector) {
+            metadata = string(
                 abi.encodePacked(
                     '{"name": "',
                     "Protector #",
@@ -141,9 +132,8 @@ contract GatherGambit is ERC721A, Ownable {
                     '"}'
                 )
             );
-        } else
-        if (entity == Entity.Wolf) {
-             metadata = string(
+        } else if (entity == Entity.Wolf) {
+            metadata = string(
                 abi.encodePacked(
                     '{"name": "',
                     "Wolf #",
@@ -168,15 +158,40 @@ contract GatherGambit is ERC721A, Ownable {
     //     ADMIN FUNCTIONS
     // ========================================
 
+    /**
+     * @notice Sets the staking contract address.
+     * @param _stakingContractAddress The address of the staking contract.
+     */
+    function setStakingContract(
+        address _stakingContractAddress
+    ) external onlyOwner {
+        _stakingContract = _stakingContractAddress;
+    }
+
     // ========================================
     //     GETTER FUNCTIONS
     // ========================================
 
     /**
+     * @notice Returns the staking contract address.
+     */
+    function getStakingContract() external view returns (address) {
+        return _stakingContract;
+    }
+
+    /**
      * @notice Returns the current epoch index.
      */
-    function getcurrentEpochIndex() external view returns (uint256) {
+    function getCurrentEpochIndex() external view returns (uint256) {
         return _epochIndex;
+    }
+
+    /**
+     * @notice Returns the epoch data of _epoch.
+     * @param _epochId The ID of the epoch to query.
+     */
+    function getEpoch(uint256 _epochId) external view returns (Epoch memory) {
+        return epochPerEpochIndex[_epochId];
     }
 
     /**
@@ -198,7 +213,7 @@ contract GatherGambit is ERC721A, Ownable {
                 )
             )
         ) % 100;
-        
+
         // 80% chance of Gatherer
         if (entityRange < 80) {
             return Entity.Gatherer;
@@ -222,8 +237,7 @@ contract GatherGambit is ERC721A, Ownable {
      * @dev Based on the commit-reveal scheme by MouseDev.
      */
     function resolveEpochIfNecessary() public {
-        Epoch memory currentEpoch = epochPerEpochIndex[_epochIndex];
-
+        Epoch storage currentEpoch = epochPerEpochIndex[_epochIndex];
         if (
             // If epoch has not been committed,
             currentEpoch.committed == false ||
@@ -243,7 +257,7 @@ contract GatherGambit is ERC721A, Ownable {
                     keccak256(
                         abi.encodePacked(
                             blockhash(currentEpoch.revealBlock),
-                            block.difficulty
+                            block.prevrandao
                         )
                     )
                 ) % (2 ** 128 - 1)
