@@ -18,15 +18,16 @@ let random: SignerWithAddress;
 let Berries: Berries;
 let GatherGambit: GatherGambit;
 let BerryLands: BerryLands;
-let gathererIndex = 0;
-const mintGatherer = async () => {
+let gathererIndex = 1;
+const mintGatherer = async () => {  
   await GatherGambit.mint(contractOwner.address, "1");
   await mine(55);
   await GatherGambit.resolveEpochIfNecessary();
   const entity = await GatherGambit.getEntity(gathererIndex);
+
   if (entity !== 1) {
     gathererIndex++;
-    mintGatherer();
+    await mintGatherer();
   }
 };
 
@@ -125,14 +126,14 @@ describe("Initialization of core functions", function () {
       });
       it("burn()", async function () {
         await GatherGambit.mint(contractOwner.address, "10");
-        await GatherGambit.burn("0");
+        await GatherGambit.burn("1");
         expect(await GatherGambit.balanceOf(contractOwner.address)).to.equal(
           BigNumber.from("9")
         );
       });
       it("not approved burn()", async function () {
         await GatherGambit.mint(contractOwner.address, "10");
-        await expect(GatherGambit.connect(user).burn("0")).to.be.revertedWith(
+        await expect(GatherGambit.connect(user).burn("1")).to.be.revertedWith(
           "TransferCallerNotOwnerNorApproved()"
         );
         expect(await GatherGambit.balanceOf(contractOwner.address)).to.equal(
@@ -141,7 +142,7 @@ describe("Initialization of core functions", function () {
       });
       it("burnBatch()", async function () {
         await GatherGambit.mint(contractOwner.address, "10");
-        await GatherGambit.burnBatch([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
+        await GatherGambit.burnBatch([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
         expect(await GatherGambit.balanceOf(contractOwner.address)).to.equal(
           BigNumber.from("0")
         );
@@ -149,7 +150,7 @@ describe("Initialization of core functions", function () {
       it("not approved burnBatch()", async function () {
         await GatherGambit.mint(contractOwner.address, "10");
         await expect(
-          GatherGambit.connect(user).burnBatch([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+          GatherGambit.connect(user).burnBatch([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
         ).to.be.revertedWith("TransferCallerNotOwnerNorApproved()");
         expect(await GatherGambit.balanceOf(contractOwner.address)).to.equal(
           BigNumber.from("10")
@@ -163,27 +164,27 @@ describe("Initialization of core functions", function () {
       });
       it("getEntity()", async function () {
         await GatherGambit.mint(contractOwner.address, "10");
-        expect(await GatherGambit.getEntity(0)).to.equal(BigNumber.from("0"));
+        expect(await GatherGambit.getEntity(1)).to.equal(BigNumber.from("0"));
       });
       it("tokenURI()", async function () {
-        await expect(GatherGambit.tokenURI(0)).to.be.revertedWith(
+        await expect(GatherGambit.tokenURI(1)).to.be.revertedWith(
           "QueryForNonexistentToken()"
         );
         await GatherGambit.mint(contractOwner.address, "1");
-        expect(await GatherGambit.tokenURI(0)).to.be.equal(
-          "data:application/json;base64,eyJuYW1lIjogIlVucmV2ZWFsZWQgIzAiLCAiZGVzY3JpcHRpb24iOiAiR2F0aGVyIEdhbWJpdCBnYW1lLiIsICJpbWFnZSI6ICJkYXRhOmltYWdlL3N2Zyt4bWw7YmFzZTY0LGFWWkNUMUozTUV0SFoyOUJRVUZCVGxOVmFFVlZaMEZCUVVOQlFVRkJRV2RCWjAxQlFVRkJUMFpLU201QlFVRkJSRVpDVFZaRlZVRkJRVUZ1U25salFVRkJRbFZXUmxSNmRFUTVkMEZCUVVGQldGSlRWR3hOUVZGUFlsbGFaMEZCUVVKV1NsSkZSbFZIVGs1cVIwUjVRVUpqWWxGb1ZFVTBSMEZaWTBGQlFXZExRVUUyYjFCVWNHZDNRVUZCUVVKS1VsVTFSWEpyU21kblp6MDkifQ=="
+        expect(await GatherGambit.tokenURI(1)).to.be.equal(
+          "data:application/json;base64,eyJuYW1lIjogIlVucmV2ZWFsZWQgIzEiLCAiZGVzY3JpcHRpb24iOiAiR2F0aGVyIEdhbWJpdCBnYW1lLiIsICJpbWFnZSI6ICJkYXRhOmltYWdlL3N2Zyt4bWw7YmFzZTY0LGFWWkNUMUozTUV0SFoyOUJRVUZCVGxOVmFFVlZaMEZCUVVOQlFVRkJRV2RCWjAxQlFVRkJUMFpLU201QlFVRkJSRVpDVFZaRlZVRkJRVUZ1U25salFVRkJRbFZXUmxSNmRFUTVkMEZCUVVGQldGSlRWR3hOUVZGUFlsbGFaMEZCUVVKV1NsSkZSbFZIVGs1cVIwUjVRVUpqWWxGb1ZFVTBSMEZaWTBGQlFXZExRVUUyYjFCVWNHZDNRVUZCUVVKS1VsVTFSWEpyU21kblp6MDkifQ=="
         );
 
         await mine(55);
 
-        expect(await GatherGambit.tokenURI(0)).to.be.equal(
-          "data:application/json;base64,eyJuYW1lIjogIlVucmV2ZWFsZWQgIzAiLCAiZGVzY3JpcHRpb24iOiAiR2F0aGVyIEdhbWJpdCBnYW1lLiIsICJpbWFnZSI6ICJkYXRhOmltYWdlL3N2Zyt4bWw7YmFzZTY0LGFWWkNUMUozTUV0SFoyOUJRVUZCVGxOVmFFVlZaMEZCUVVOQlFVRkJRV2RCWjAxQlFVRkJUMFpLU201QlFVRkJSRVpDVFZaRlZVRkJRVUZ1U25salFVRkJRbFZXUmxSNmRFUTVkMEZCUVVGQldGSlRWR3hOUVZGUFlsbGFaMEZCUVVKV1NsSkZSbFZIVGs1cVIwUjVRVUpqWWxGb1ZFVTBSMEZaWTBGQlFXZExRVUUyYjFCVWNHZDNRVUZCUVVKS1VsVTFSWEpyU21kblp6MDkifQ=="
+        expect(await GatherGambit.tokenURI(1)).to.be.equal(
+          "data:application/json;base64,eyJuYW1lIjogIlVucmV2ZWFsZWQgIzEiLCAiZGVzY3JpcHRpb24iOiAiR2F0aGVyIEdhbWJpdCBnYW1lLiIsICJpbWFnZSI6ICJkYXRhOmltYWdlL3N2Zyt4bWw7YmFzZTY0LGFWWkNUMUozTUV0SFoyOUJRVUZCVGxOVmFFVlZaMEZCUVVOQlFVRkJRV2RCWjAxQlFVRkJUMFpLU201QlFVRkJSRVpDVFZaRlZVRkJRVUZ1U25salFVRkJRbFZXUmxSNmRFUTVkMEZCUVVGQldGSlRWR3hOUVZGUFlsbGFaMEZCUVVKV1NsSkZSbFZIVGs1cVIwUjVRVUpqWWxGb1ZFVTBSMEZaWTBGQlFXZExRVUUyYjFCVWNHZDNRVUZCUVVKS1VsVTFSWEpyU21kblp6MDkifQ=="
         );
 
         await GatherGambit.resolveEpochIfNecessary();
 
-        expect(await GatherGambit.tokenURI(0)).to.not.be.equal(
-          "data:application/json;base64,eyJuYW1lIjogIlVucmV2ZWFsZWQgIzAiLCAiZGVzY3JpcHRpb24iOiAiR2F0aGVyIEdhbWJpdCBnYW1lLiIsICJpbWFnZSI6ICJkYXRhOmltYWdlL3N2Zyt4bWw7YmFzZTY0LGFWWkNUMUozTUV0SFoyOUJRVUZCVGxOVmFFVlZaMEZCUVVOQlFVRkJRV2RCWjAxQlFVRkJUMFpLU201QlFVRkJSRVpDVFZaRlZVRkJRVUZ1U25salFVRkJRbFZXUmxSNmRFUTVkMEZCUVVGQldGSlRWR3hOUVZGUFlsbGFaMEZCUVVKV1NsSkZSbFZIVGs1cVIwUjVRVUpqWWxGb1ZFVTBSMEZaWTBGQlFXZExRVUUyYjFCVWNHZDNRVUZCUVVKS1VsVTFSWEpyU21kblp6MDkifQ=="
+        expect(await GatherGambit.tokenURI(1)).to.not.be.equal(
+          "data:application/json;base64,eyJuYW1lIjogIlVucmV2ZWFsZWQgIzEiLCAiZGVzY3JpcHRpb24iOiAiR2F0aGVyIEdhbWJpdCBnYW1lLiIsICJpbWFnZSI6ICJkYXRhOmltYWdlL3N2Zyt4bWw7YmFzZTY0LGFWWkNUMUozTUV0SFoyOUJRVUZCVGxOVmFFVlZaMEZCUVVOQlFVRkJRV2RCWjAxQlFVRkJUMFpLU201QlFVRkJSRVpDVFZaRlZVRkJRVUZ1U25salFVRkJRbFZXUmxSNmRFUTVkMEZCUVVGQldGSlRWR3hOUVZGUFlsbGFaMEZCUVVKV1NsSkZSbFZIVGs1cVIwUjVRVUpqWWxGb1ZFVTBSMEZaWTBGQlFXZExRVUUyYjFCVWNHZDNRVUZCUVVKS1VsVTFSWEpyU21kblp6MDkifQ=="
         );
       });
       it("should support 721 interface", async function () {
@@ -209,7 +210,7 @@ describe("Initialization of core functions", function () {
       });
       describe("enterBerryLands()", async function () {
         beforeEach(async function () {
-          gathererIndex = 0;
+          gathererIndex = 1;
           await mintGatherer();
         });
         describe("FertileFields", async function () {
@@ -219,7 +220,6 @@ describe("Initialization of core functions", function () {
             ).to.be.revertedWith("QueryForNonexistentToken()");
           });
           it("should revert if not approved", async function () {
-            await GatherGambit.mint(contractOwner.address, "1");
             await expect(
               BerryLands.enterBerryLands(gathererIndex, 0)
             ).to.be.revertedWith(
@@ -241,21 +241,21 @@ describe("Initialization of core functions", function () {
           it("should revert if not approved", async function () {
             await GatherGambit.mint(contractOwner.address, "1");
             await expect(
-              BerryLands.enterBerryLands(gathererIndex, 0)
+              BerryLands.enterBerryLands(gathererIndex, 1)
             ).to.be.revertedWith(
               "TransferCallerNotOwnerNorApproved()"
             );
           });
           it("should be successful", async function () {
             await GatherGambit.approve(BerryLands.address, gathererIndex);
-            await expect(BerryLands.enterBerryLands(gathererIndex, 0)).to.be
+            await expect(BerryLands.enterBerryLands(gathererIndex, 1)).to.be
               .fulfilled;
           });
         });
       });
       describe("exitBerryLands()", async function () {
         it("getClaimableBerries()", async function () {
-          gathererIndex = 0;
+          gathererIndex = 1;
           await mintGatherer();
           await GatherGambit.approve(BerryLands.address, gathererIndex);
           await BerryLands.enterBerryLands(gathererIndex, 0);
@@ -265,9 +265,9 @@ describe("Initialization of core functions", function () {
         });
         describe("FertileFields", async function () {
           beforeEach(async function () {
-            gathererIndex = 0;
+            gathererIndex = 1;
             await mintGatherer();
-            
+
             await GatherGambit.approve(BerryLands.address, gathererIndex);
             await BerryLands.enterBerryLands(gathererIndex, 0);
           });
@@ -290,11 +290,11 @@ describe("Initialization of core functions", function () {
         });
         describe("WhisperingWoods", async function () {
           beforeEach(async function () {
-            gathererIndex = 0;
+            gathererIndex = 1;
             await mintGatherer();
-            
-            await GatherGambit.approve(BerryLands.address, gathererIndex);
-            await BerryLands.enterBerryLands(gathererIndex, 1);
+
+            await GatherGambit.approve(BerryLands.address, gathererIndex);            
+            await BerryLands.enterBerryLands(gathererIndex, 1);            
           });
           it("should revert if not token owner", async function () {
             await expect(

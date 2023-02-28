@@ -272,4 +272,11 @@ contract GatherGambit is IGatherGambit, ERC721A, Ownable {
             resolveEpochIfNecessary();
         }
     }
+
+    /**
+     * @dev Override to start with token ID 1.
+     */
+    function _startTokenId() internal pure override returns (uint256) {
+        return 1;
+    }
 }
