@@ -71,7 +71,6 @@ contract BerryLands is Ownable {
         uint128 protectorId; // The token ID of the protector (0 if no protector)
         uint64 initBlock; // The block at which was this token staked
         address owner; // The owner of the token
-        uint256 berries; // The amount of accumulated berries
     }
 
     IGatherGambit private _gambit;
@@ -109,8 +108,7 @@ contract BerryLands is Ownable {
                 tokenId: uint128(_tokenId),
                 protectorId: 0,
                 initBlock: uint64(block.number),
-                owner: msg.sender,
-                berries: 0
+                owner: msg.sender
             });
         } else if (_location == Location.WhisperingWoods) {
             if (_stakedInWhisperingWoods[_tokenId].owner != address(0))
@@ -121,8 +119,7 @@ contract BerryLands is Ownable {
                 tokenId: uint128(_tokenId),
                 protectorId: 0,
                 initBlock: uint64(block.number),
-                owner: msg.sender,
-                berries: 0
+                owner: msg.sender
             });
         } else {
             revert InvalidInput();
@@ -140,7 +137,7 @@ contract BerryLands is Ownable {
      */
     function exitBerryLands(uint256 _tokenId, Location _location) external {
         if (_location == Location.FertileFields) {
-            StakedAsset memory stakedAsset = _stakedInFertileFields[_tokenId];
+            StakedAsset storage stakedAsset = _stakedInFertileFields[_tokenId];
             if (stakedAsset.owner != msg.sender) revert NoPermission();
 
             uint256 claimableBerries = getClaimableBerries(_tokenId, _location);
@@ -148,6 +145,7 @@ contract BerryLands is Ownable {
             _stakedGatherers--;
             uint128 protectorId = stakedAsset.protectorId;
             delete _stakedInFertileFields[_tokenId];
+            _stakedInFertileFields[_tokenId] = stakedAsset;
 
             if (protectorId != 0) {
                 _isStakedProtector[protectorId] = false;
@@ -164,7 +162,7 @@ contract BerryLands is Ownable {
             _berries.mint(msg.sender, claimableBerries);
             _gambit.transferFrom(address(this), msg.sender, _tokenId);
         } else if (_location == Location.WhisperingWoods) {
-            StakedAsset memory stakedAsset = _stakedInWhisperingWoods[_tokenId];
+            StakedAsset storage stakedAsset = _stakedInWhisperingWoods[_tokenId];
             if (stakedAsset.owner != msg.sender) revert NoPermission();
 
             uint256 claimableBerries = getClaimableBerries(_tokenId, _location);
@@ -172,6 +170,7 @@ contract BerryLands is Ownable {
             _stakedGatherers--;
             uint128 protectorId = stakedAsset.protectorId;
             delete _stakedInWhisperingWoods[_tokenId];
+            _stakedInWhisperingWoods[_tokenId] = stakedAsset;
 
             if (protectorId != 0) {
                 _isStakedProtector[protectorId] = false;
@@ -218,6 +217,7 @@ contract BerryLands is Ownable {
 
             _isStakedProtector[_tokenId] = true;
             stakedAsset.protectorId = uint128(_tokenId);
+            _stakedInFertileFields[_gathererId] = stakedAsset;
         } else if (_location == Location.WhisperingWoods) {
             StakedAsset memory stakedAsset = _stakedInWhisperingWoods[
                 _gathererId
@@ -228,6 +228,7 @@ contract BerryLands is Ownable {
 
             _isStakedProtector[_tokenId] = true;
             stakedAsset.protectorId = uint128(_tokenId);
+            _stakedInWhisperingWoods[_gathererId] = stakedAsset;
         } else {
             revert InvalidInput();
         }
@@ -238,44 +239,62 @@ contract BerryLands is Ownable {
 
     /**
      * @notice Removes a protector from a staked token.
-     * @param _tokenId The token ID of the protector.
      * @param _gathererId The token ID of the gatherer.
      * @param _location The location of where the gatherer is staked.
+     * @dev make sure to call this with gatherer ID, not protector ID
      */
-    function removeProtector(
-        uint256 _tokenId,
-        uint256 _gathererId,
-        Location _location
-    ) external {
-        if (!_isStakedProtector[_tokenId]) revert NotStaked();
-
+    function removeProtector(uint256 _gathererId, Location _location) external {
         if (_location == Location.FertileFields) {
             StakedAsset memory stakedAsset = _stakedInFertileFields[
                 _gathererId
             ];
+            uint128 protectorId = stakedAsset.protectorId;
             if (stakedAsset.owner != msg.sender) revert NoPermission();
+            if (!_isStakedProtector[protectorId])
+                revert NotStaked();
 
-            _isStakedProtector[_tokenId] = false;
+            _isStakedProtector[protectorId] = false;
             delete stakedAsset.protectorId;
+            _stakedInFertileFields[_gathererId] = stakedAsset;
             _stakedProtectors--;
-
-            _gambit.transferFrom(address(this), msg.sender, _tokenId);
+            _gambit.transferFrom(
+                address(this),
+                msg.sender,
+                protectorId
+            );
+            emit ProtectorRemoved(
+                protectorId,
+                _gathererId,
+                msg.sender,
+                _location
+            );
         } else if (_location == Location.WhisperingWoods) {
             StakedAsset memory stakedAsset = _stakedInWhisperingWoods[
                 _gathererId
             ];
+            uint128 protectorId = stakedAsset.protectorId;
             if (stakedAsset.owner != msg.sender) revert NoPermission();
+            if (!_isStakedProtector[protectorId])
+                revert NotStaked();
 
-            _isStakedProtector[_tokenId] = false;
+            _isStakedProtector[protectorId] = false;
             delete stakedAsset.protectorId;
+            _stakedInWhisperingWoods[_gathererId] = stakedAsset;
             _stakedProtectors--;
-
-            _gambit.transferFrom(address(this), msg.sender, _tokenId);
+            _gambit.transferFrom(
+                address(this),
+                msg.sender,
+                protectorId
+            );
+            emit ProtectorRemoved(
+                protectorId,
+                _gathererId,
+                msg.sender,
+                _location
+            );
         } else {
             revert InvalidInput();
         }
-
-        emit ProtectorRemoved(_tokenId, _gathererId, msg.sender, _location);
     }
 
     // ========================================
@@ -312,6 +331,21 @@ contract BerryLands is Ownable {
         }
 
         return claimable;
+    }
+
+    function getStakedGatherer(
+        uint256 _tokenId,
+        Location _location
+    ) external view returns (StakedAsset memory) {
+        if (_location == Location.FertileFields) {
+            StakedAsset memory stakedAsset = _stakedInFertileFields[_tokenId];
+            return stakedAsset;
+        } else if (_location == Location.WhisperingWoods) {
+            StakedAsset memory stakedAsset = _stakedInWhisperingWoods[_tokenId];
+            return stakedAsset;
+        } else {
+            revert InvalidInput();
+        }
     }
 
     /**
