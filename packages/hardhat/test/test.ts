@@ -628,5 +628,8 @@ describe("Initialization of core functions", function () {
         });
       });
     });
+    describe("SereneSettlements interaction [reproduction]", async function () {
+
+    });
   });
 });

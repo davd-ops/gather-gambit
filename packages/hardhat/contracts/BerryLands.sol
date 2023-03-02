@@ -5,7 +5,6 @@ import "./IGatherGambit.sol";
 import "./IBerries.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "hardhat/console.sol";
 
 // ========================================
 //
@@ -22,7 +21,7 @@ import "hardhat/console.sol";
  * @notice In Berry Lands, you collect $BERRIES!
  * @dev A contract for staking your Gather Gambit NFTs.
  */
-contract BerryLands is Ownable {
+contract BerryLands {
     // ========================================
     //     EVENT & ERROR DEFINITIONS
     // ========================================
@@ -51,15 +50,18 @@ contract BerryLands is Ownable {
     );
     event AttackInitiated(
         uint256 indexed attackerId,
-        uint256 indexed defenderId,
         address indexed owner,
-        Location location
+        Location indexed location
     );
     event AttackResolved(
         uint256 indexed attackerId,
-        uint256 indexed defenderId,
         address indexed owner,
-        Location location
+        Location indexed location,
+        uint256 stolenAmount,
+        uint256 lootedGathererId,
+        bool wasProtected,
+        bool gathererKilled,
+        bool wolfKilled
     );
 
     error NoPermission();
@@ -81,7 +83,6 @@ contract BerryLands is Ownable {
     }
 
     struct StakedAsset {
-        uint128 tokenId; // The token ID of the staked token // TODO: is this neccessary?
         uint128 protectorId; // The token ID of the protector (0 if no protector)
         uint128 indexInGathArray; // The index of the token in the gatherers array
         uint64 initBlock; // The block at which was this token staked
@@ -136,7 +137,6 @@ contract BerryLands is Ownable {
             _gatherersInFertileFields.push(uint128(_tokenId));
 
             _stakedInFertileFields[_tokenId] = StakedAsset({
-                tokenId: uint128(_tokenId),
                 protectorId: 0,
                 indexInGathArray: uint128(newIndex),
                 initBlock: uint64(block.number),
@@ -152,7 +152,6 @@ contract BerryLands is Ownable {
 
             _gambit.transferFrom(msg.sender, address(this), _tokenId);
             _stakedInWhisperingWoods[_tokenId] = StakedAsset({
-                tokenId: uint128(_tokenId),
                 protectorId: 0,
                 indexInGathArray: uint128(newIndex),
                 initBlock: uint64(block.number),
@@ -371,6 +370,8 @@ contract BerryLands is Ownable {
             location: uint8(_location),
             owner: msg.sender
         });
+
+        emit AttackInitiated(_tokenId, msg.sender, _location);
     }
 
     /**
@@ -381,7 +382,10 @@ contract BerryLands is Ownable {
         Attack memory attack = _attacks[_tokenId];
         address attacker = attack.owner;
         uint256 stolen;
+        bool isProtected;
         bool wolfKilled;
+        bool gathererKilled;
+        uint256 gathererId;
         if (attacker != msg.sender) revert NoPermission();
 
         _gambit.resolveEpochIfNecessary();
@@ -398,15 +402,19 @@ contract BerryLands is Ownable {
                 keccak256(abi.encodePacked(epoch.randomness))
             ) % _gatherersInFertileFields.length;
 
+            gathererId = _gatherersInFertileFields[index];
+
             StakedAsset memory stakedAsset = _stakedInFertileFields[
                 _gatherersInFertileFields[index]
             ];
 
+            if (stakedAsset.protectorId > 0) isProtected = true;
+
             // protected - in fertile fields
-            if (stakedAsset.protectorId > 0) {
+            if (isProtected) {
                 // get total claimable berries
                 uint256 claimable = getClaimableBerries(
-                    stakedAsset.tokenId,
+                    gathererId,
                     Location(attack.location)
                 );
 
@@ -417,8 +425,7 @@ contract BerryLands is Ownable {
                 claimable = claimable - stolen;
 
                 // update state
-                _stakedInFertileFields[stakedAsset.tokenId] = StakedAsset({
-                    tokenId: stakedAsset.tokenId,
+                _stakedInFertileFields[gathererId] = StakedAsset({
                     protectorId: stakedAsset.protectorId,
                     indexInGathArray: stakedAsset.indexInGathArray,
                     initBlock: uint64(block.number),
@@ -431,13 +438,12 @@ contract BerryLands is Ownable {
             else {
                 // steal all claimable berries
                 stolen = getClaimableBerries(
-                    stakedAsset.tokenId,
+                    gathererId,
                     Location(attack.location)
                 );
 
                 // update state
-                _stakedInFertileFields[stakedAsset.tokenId] = StakedAsset({
-                    tokenId: stakedAsset.tokenId,
+                _stakedInFertileFields[gathererId] = StakedAsset({
                     protectorId: stakedAsset.protectorId,
                     indexInGathArray: stakedAsset.indexInGathArray,
                     initBlock: uint64(block.number),
@@ -454,15 +460,19 @@ contract BerryLands is Ownable {
                 keccak256(abi.encodePacked(epoch.randomness))
             ) % _gatherersInWhisperingWoods.length;
 
+            gathererId = _gatherersInWhisperingWoods[index];
+
             StakedAsset memory stakedAsset = _stakedInWhisperingWoods[
-                _gatherersInWhisperingWoods[index]
+                gathererId
             ];
 
+            if (stakedAsset.protectorId > 0) isProtected = true;
+
             // protected - in whispering woods
-            if (stakedAsset.protectorId > 0) {
+            if (isProtected) {
                 // get total claimable berries
                 uint256 claimable = getClaimableBerries(
-                    stakedAsset.tokenId,
+                    gathererId,
                     Location(attack.location)
                 );
 
@@ -473,8 +483,7 @@ contract BerryLands is Ownable {
                 claimable = claimable - stolen;
 
                 // update state
-                _stakedInWhisperingWoods[stakedAsset.tokenId] = StakedAsset({
-                    tokenId: stakedAsset.tokenId,
+                _stakedInWhisperingWoods[gathererId] = StakedAsset({
                     protectorId: stakedAsset.protectorId,
                     indexInGathArray: stakedAsset.indexInGathArray,
                     initBlock: uint64(block.number),
@@ -495,14 +504,14 @@ contract BerryLands is Ownable {
             else {
                 // steal all claimable berries
                 stolen = getClaimableBerries(
-                    stakedAsset.tokenId,
+                    gathererId,
                     Location(attack.location)
                 );
 
                 // kill gatherer
-                delete _stakedInWhisperingWoods[stakedAsset.tokenId];
-                // override the old position with the last element of the array, and then pop the last element
-                // this clears the storage and saves gas
+                gathererKilled = true;
+                delete _stakedInWhisperingWoods[gathererId];
+                // remove gatherer from array
                 uint128 lastIndexValue = _gatherersInWhisperingWoods[
                     _gatherersInWhisperingWoods.length - 1
                 ];
@@ -515,7 +524,7 @@ contract BerryLands is Ownable {
                 delete _attacks[_tokenId];
 
                 //burn gatherer
-                _gambit.burn(stakedAsset.tokenId);
+                _gambit.burn(gathererId);
             }
         } else {
             revert InvalidLocation();
@@ -533,11 +542,18 @@ contract BerryLands is Ownable {
             // transfer Wolf back to attacker
             _gambit.transferFrom(address(this), attacker, _tokenId);
         }
-    }
 
-    // ========================================
-    //     ADMIN FUNCTIONS
-    // ========================================
+        emit AttackResolved(
+            _tokenId,
+            attacker,
+            Location(attack.location),
+            stolen,
+            gathererId,
+            isProtected,
+            gathererKilled,
+            wolfKilled
+        );
+    }
 
     // ========================================
     //     GETTER FUNCTIONS
@@ -551,7 +567,7 @@ contract BerryLands is Ownable {
         if (_location == Location.FertileFields) {
             StakedAsset memory stakedAsset = _stakedInFertileFields[_tokenId];
 
-            uint256 DAILY_FERTILE_FIELDS_RATE = 1000 * (10**18);
+            uint256 DAILY_FERTILE_FIELDS_RATE = 1000 * (10 ** 18);
 
             claimable =
                 ((block.number - stakedAsset.initBlock) *
@@ -562,7 +578,7 @@ contract BerryLands is Ownable {
             StakedAsset memory stakedAsset = _stakedInWhisperingWoods[_tokenId];
             if (stakedAsset.owner != msg.sender) revert NoPermission();
 
-            uint256 DAILY_WHISPERING_WOODS_RATE = 5000 * (10**18);
+            uint256 DAILY_WHISPERING_WOODS_RATE = 5000 * (10 ** 18);
             claimable =
                 ((block.number - stakedAsset.initBlock) *
                     DAILY_WHISPERING_WOODS_RATE) /
@@ -601,8 +617,4 @@ contract BerryLands is Ownable {
     function getBerriesContract() external view returns (address) {
         return address(_berries);
     }
-
-    // ========================================
-    //     OTHER FUNCTIONS
-    // ========================================
 }
