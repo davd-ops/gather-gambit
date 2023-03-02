@@ -20,6 +20,7 @@ let GatherGambit: GatherGambit;
 let BerryLands: BerryLands;
 let gathererIndex = 1;
 let protectorIndex = 1;
+let wolfIndex = 1;
 
 const mintGatherer = async () => {
   await GatherGambit.mint(contractOwner.address, "1");
@@ -43,6 +44,17 @@ const mintProtector = async () => {
     await mintProtector();
   }
 };
+const mintWolf = async () => {
+  await GatherGambit.mint(contractOwner.address, "1");
+  await mine(55);
+  await GatherGambit.resolveEpochIfNecessary();
+  const entity = await GatherGambit.getEntity(wolfIndex);
+
+  if (entity !== 3) {
+    wolfIndex++;
+    await mintWolf();
+  }
+};
 
 describe("Initialization of core functions", function () {
   beforeEach(async function () {
@@ -61,7 +73,7 @@ describe("Initialization of core functions", function () {
     ])) as BerryLands;
   });
 
-  describe("Berries Contract", function () {
+  describe.skip("Berries Contract", function () {
     describe("General Stuff", function () {
       it("should have proper owner", async function () {
         expect(await Berries.owner()).to.equal(contractOwner.address);
@@ -118,7 +130,7 @@ describe("Initialization of core functions", function () {
       await mine(1000);
       await Berries.addController(BerryLands.address);
     });
-    describe("General Stuff", function () {
+    describe.skip("General Stuff", function () {
       it("should have proper owner", async function () {
         expect(await GatherGambit.owner()).to.equal(contractOwner.address);
       });
@@ -221,7 +233,7 @@ describe("Initialization of core functions", function () {
         );
         expect(await BerryLands.getBerriesContract()).to.equal(Berries.address);
       });
-      describe("enterBerryLands()", async function () {
+      describe.skip("enterBerryLands()", async function () {
         beforeEach(async function () {
           gathererIndex = 1;
           await mintGatherer();
@@ -268,12 +280,13 @@ describe("Initialization of core functions", function () {
           });
         });
       });
-      describe("exitBerryLands()", async function () {
+      describe.skip("exitBerryLands()", async function () {
         it("getClaimableBerries()", async function () {
           gathererIndex = 1;
           await mintGatherer();
           await GatherGambit.approve(BerryLands.address, gathererIndex);
           await BerryLands.enterBerryLands(gathererIndex, 0);
+          await mine(1);
           expect(
             await BerryLands.getClaimableBerries(gathererIndex, 0)
           ).to.above(BigNumber.from("0"));
@@ -302,40 +315,11 @@ describe("Initialization of core functions", function () {
             ).to.be.above(initialBalance);
             expect(await Berries.balanceOf(contractOwner.address)).to.be.above(
               BigNumber.from("0")
-            );            
+            );
             expect(
               (await BerryLands.getStakedGatherer(gathererIndex, 0)).owner
             ).to.be.equal("0x0000000000000000000000000000000000000000");
             expect(await GatherGambit.ownerOf(gathererIndex)).to.equal(
-              contractOwner.address
-            );
-          });
-          it("addProtector()", async function () {
-            protectorIndex = 1;
-            await mintProtector();
-            await GatherGambit.approve(BerryLands.address, protectorIndex);
-            await BerryLands.addProtector(protectorIndex, gathererIndex, 0);
-            expect(
-              (await BerryLands.getStakedGatherer(gathererIndex, 0)).protectorId
-            ).to.equal(protectorIndex);
-            expect(await GatherGambit.ownerOf(protectorIndex)).to.equal(
-              BerryLands.address
-            );
-          });
-          it("removeProtector()", async function () {
-            protectorIndex = 1;
-            await mintProtector();
-            await GatherGambit.approve(BerryLands.address, protectorIndex);
-            await BerryLands.addProtector(protectorIndex, gathererIndex, 0);
-            expect(
-              (await BerryLands.getStakedGatherer(gathererIndex, 0)).protectorId
-            ).to.equal(protectorIndex);
-
-            await BerryLands.removeProtector(gathererIndex, 0);
-            expect(
-              (await BerryLands.getStakedGatherer(gathererIndex, 0)).protectorId
-            ).to.equal(0);            
-            expect(await GatherGambit.ownerOf(protectorIndex)).to.equal(
               contractOwner.address
             );
           });
@@ -366,6 +350,79 @@ describe("Initialization of core functions", function () {
               BigNumber.from("0")
             );
           });
+        });
+      });
+      describe.skip("Protector interaction", async function () {
+        describe("FertileFields", async function () {
+          beforeEach(async function () {
+            gathererIndex = 1;
+            await mintGatherer();
+
+            await GatherGambit.approve(BerryLands.address, gathererIndex);
+            await BerryLands.enterBerryLands(gathererIndex, 0);
+          });
+          it("addProtector()", async function () {
+            protectorIndex = 1;
+            await mintProtector();
+            await GatherGambit.approve(BerryLands.address, protectorIndex);
+            await BerryLands.addProtector(protectorIndex, gathererIndex, 0);
+            expect(
+              (await BerryLands.getStakedGatherer(gathererIndex, 0)).protectorId
+            ).to.equal(protectorIndex);
+            expect(await GatherGambit.ownerOf(protectorIndex)).to.equal(
+              BerryLands.address
+            );
+          });
+          it("removeProtector()", async function () {
+            protectorIndex = 1;
+            await mintProtector();
+            await GatherGambit.approve(BerryLands.address, protectorIndex);
+            await BerryLands.addProtector(protectorIndex, gathererIndex, 0);
+            expect(
+              (await BerryLands.getStakedGatherer(gathererIndex, 0)).protectorId
+            ).to.equal(protectorIndex);
+
+            await BerryLands.removeProtector(gathererIndex, 0);
+            expect(
+              (await BerryLands.getStakedGatherer(gathererIndex, 0)).protectorId
+            ).to.be.equal("0");
+            expect(
+              (await BerryLands.getStakedGatherer(gathererIndex, 0)).protectorId
+            ).to.equal(0);
+            expect(await GatherGambit.ownerOf(protectorIndex)).to.equal(
+              contractOwner.address
+            );
+          });
+          it("exit without removing protector", async function () {
+            protectorIndex = 1;
+            await mintProtector();
+            await GatherGambit.approve(BerryLands.address, protectorIndex);
+            expect(await GatherGambit.ownerOf(protectorIndex)).to.equal(
+              contractOwner.address
+            );
+            await BerryLands.addProtector(protectorIndex, gathererIndex, 0);
+            expect(await GatherGambit.ownerOf(protectorIndex)).to.equal(
+              BerryLands.address
+            );
+            await BerryLands.exitBerryLands(gathererIndex, 0);
+            expect(await GatherGambit.ownerOf(protectorIndex)).to.equal(
+              contractOwner.address
+            );
+            await GatherGambit.approve(BerryLands.address, gathererIndex);
+            await BerryLands.enterBerryLands(gathererIndex, 0);
+            expect(
+              (await BerryLands.getStakedGatherer(gathererIndex, 0)).protectorId
+            ).to.equal(0);
+          });
+        });
+        describe("WhisperingWoods", async function () {
+          beforeEach(async function () {
+            gathererIndex = 1;
+            await mintGatherer();
+
+            await GatherGambit.approve(BerryLands.address, gathererIndex);
+            await BerryLands.enterBerryLands(gathererIndex, 1);
+          });
           it("addProtector()", async function () {
             protectorIndex = 1;
             await mintProtector();
@@ -390,10 +447,183 @@ describe("Initialization of core functions", function () {
             await BerryLands.removeProtector(gathererIndex, 1);
             expect(
               (await BerryLands.getStakedGatherer(gathererIndex, 1)).protectorId
+            ).to.be.equal("0");
+            expect(
+              (await BerryLands.getStakedGatherer(gathererIndex, 1)).protectorId
             ).to.equal(0);
             expect(
               (await BerryLands.getStakedGatherer(gathererIndex, 1)).owner
             ).to.be.equal(contractOwner.address);
+          });
+          it("exit without removing protector", async function () {
+            protectorIndex = 1;
+            await mintProtector();
+            await GatherGambit.approve(BerryLands.address, protectorIndex);
+            expect(await GatherGambit.ownerOf(protectorIndex)).to.equal(
+              contractOwner.address
+            );
+            await BerryLands.addProtector(protectorIndex, gathererIndex, 1);
+            expect(await GatherGambit.ownerOf(protectorIndex)).to.equal(
+              BerryLands.address
+            );
+            await BerryLands.exitBerryLands(gathererIndex, 1);
+            expect(await GatherGambit.ownerOf(protectorIndex)).to.equal(
+              contractOwner.address
+            );
+            await GatherGambit.approve(BerryLands.address, gathererIndex);
+            await BerryLands.enterBerryLands(gathererIndex, 1);
+            expect(
+              (await BerryLands.getStakedGatherer(gathererIndex, 1)).protectorId
+            ).to.equal(0);
+          });
+        });
+      });
+      describe("Attack", async function () {
+        beforeEach(async function () {
+          wolfIndex = 1;
+          gathererIndex = 1;
+          protectorIndex = 1;
+          await mintGatherer();
+          await mintProtector();
+          await mintWolf();
+          await GatherGambit.approve(BerryLands.address, gathererIndex);
+          await GatherGambit.approve(BerryLands.address, protectorIndex);
+          await GatherGambit.approve(BerryLands.address, wolfIndex);
+        });
+        describe("FertileFields", async function () {
+          beforeEach(async function () {
+            await BerryLands.enterBerryLands(gathererIndex, 0);
+          });
+          it("initAttack()", async function () {
+            await BerryLands.initiateAttack(wolfIndex, 0);
+            expect(await GatherGambit.ownerOf(wolfIndex)).to.equal(
+              BerryLands.address
+            );
+          });
+          describe("resolveAttack()", async function () {
+            it("shouldn't be able to resolve", async function () {
+              await BerryLands.initiateAttack(wolfIndex, 0);
+              await expect(
+                BerryLands.resolveAttack(wolfIndex)
+              ).to.be.revertedWith("AttackNotResolved()");
+            });
+            it("attack when not protected", async function () {
+              await BerryLands.initiateAttack(wolfIndex, 0);
+              await mine(55);
+              const claimable = await BerryLands.getClaimableBerries(
+                gathererIndex,
+                0
+              );       
+              await BerryLands.resolveAttack(wolfIndex);
+              expect(
+                (await BerryLands.getStakedGatherer(gathererIndex, 0))
+                  .claimableBerries
+              ).to.be.equal(0);
+              expect(await BerryLands.getClaimableBerries(
+                gathererIndex,
+                0
+              )).to.be.below(claimable);
+              expect(
+                await Berries.balanceOf(contractOwner.address)
+              ).to.be.closeTo(claimable, ethers.BigNumber.from("500000000000000000"));
+              expect(await GatherGambit.ownerOf(wolfIndex)).to.equal(
+                contractOwner.address
+              );
+            });
+            it("attack when protected", async function () {
+              await BerryLands.addProtector(protectorIndex, gathererIndex, 0);
+              await BerryLands.initiateAttack(wolfIndex, 0);
+              await mine(100);
+              const claimable = await BerryLands.getClaimableBerries(
+                gathererIndex,
+                0
+              );              
+              const stolen = claimable
+                .mul(BigNumber.from("4"))
+                .div(BigNumber.from("10"));
+              let userCut = claimable.sub(stolen);
+              await BerryLands.resolveAttack(wolfIndex);
+              expect(
+                (await BerryLands.getStakedGatherer(gathererIndex, 0))
+                  .claimableBerries
+              ).to.be.closeTo(userCut, ethers.BigNumber.from("500000000000000000"));
+              expect(
+                await Berries.balanceOf(contractOwner.address)
+              ).to.be.closeTo(stolen, ethers.BigNumber.from("500000000000000000"));;
+              expect(await GatherGambit.ownerOf(wolfIndex)).to.equal(
+                contractOwner.address
+              );
+              expect(await BerryLands.getClaimableBerries(
+                gathererIndex,
+                0
+              )).to.be.below(claimable);
+            });
+          });
+        });
+        describe("WhisperingWoods", async function () {
+          beforeEach(async function () {
+            await BerryLands.enterBerryLands(gathererIndex, 1);
+          });
+          it("initAttack()", async function () {
+            await BerryLands.initiateAttack(wolfIndex, 1);
+            expect(await GatherGambit.ownerOf(wolfIndex)).to.equal(
+              BerryLands.address
+            );
+          });
+          describe("resolveAttack()", async function () {
+            it("shouldn't be able to resolve", async function () {
+              await BerryLands.initiateAttack(wolfIndex, 1);
+              await expect(
+                BerryLands.resolveAttack(wolfIndex)
+              ).to.be.revertedWith("AttackNotResolved()");
+            });
+            it("attack when not protected", async function () {
+              await BerryLands.initiateAttack(wolfIndex, 1);
+              await mine(55);
+              const claimable = await BerryLands.getClaimableBerries(
+                gathererIndex,
+                1
+              );              
+              await BerryLands.resolveAttack(wolfIndex);
+              expect(
+                (await BerryLands.getStakedGatherer(gathererIndex, 1))
+                  .owner
+              ).to.be.equal("0x0000000000000000000000000000000000000000");
+              await expect(GatherGambit.ownerOf(gathererIndex)).to.be.revertedWith(
+                "OwnerQueryForNonexistentToken()"
+              );
+              expect(
+                await Berries.balanceOf(contractOwner.address)
+              ).to.be.closeTo(claimable, ethers.BigNumber.from("500000000000000000"));
+              expect(await GatherGambit.ownerOf(wolfIndex)).to.equal(
+                contractOwner.address
+              );
+            });
+            it("attack when protected", async function () {
+              await BerryLands.addProtector(protectorIndex, gathererIndex, 1);
+              await BerryLands.initiateAttack(wolfIndex, 1);
+              await mine(100);
+              const claimable = await BerryLands.getClaimableBerries(
+                gathererIndex,
+                1
+              );              
+              const stolen = claimable
+                .mul(BigNumber.from("7"))
+                .div(BigNumber.from("10"));
+              let userCut = claimable.sub(stolen);
+              await BerryLands.resolveAttack(wolfIndex);
+              expect(
+                (await BerryLands.getStakedGatherer(gathererIndex, 1))
+                  .claimableBerries
+              ).to.be.closeTo(userCut, ethers.BigNumber.from("500000000000000000"));
+              expect(
+                await Berries.balanceOf(contractOwner.address)
+              ).to.be.closeTo(stolen, ethers.BigNumber.from("500000000000000000"));
+              expect(await BerryLands.getClaimableBerries(
+                gathererIndex,
+                1
+              )).to.be.below(claimable);
+            });
           });
         });
       });

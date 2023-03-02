@@ -17,7 +17,7 @@ interface IGatherGambit is IERC721A {
         uint128 randomness; // The source of randomness for tokens from this epoch
         uint64 revealBlock; // The block at which this epoch was / is revealed
         bool committed; // Whether the epoch has been instantiated
-        bool revealed; // Whether the epoch has been revealed
+        bool resolved; // Whether the epoch has been resolved
     }
 
     function mint(address _address, uint256 _amount) external;
@@ -27,6 +27,8 @@ interface IGatherGambit is IERC721A {
     function burnBatch(uint256[] calldata _tokenIds) external;
 
     function tokenURI(uint256 _tokenId) external view returns (string memory);
+
+    function resolveEpochIfNecessary () external;
 
     function setStakingContract(address _stakingContractAddress) external;
 

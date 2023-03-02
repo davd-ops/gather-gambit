@@ -201,19 +201,18 @@ contract GatherGambit is IGatherGambit, ERC721A, Ownable {
     function getEntity(uint256 _tokenId) public view returns (Entity) {
         if (!_exists(_tokenId)) revert QueryForNonexistentToken();
 
-        if (!epochPerEpochIndex[epochPerToken[_tokenId]].revealed) {
+        if (!epochPerEpochIndex[epochPerToken[_tokenId]].resolved) {
             return Entity.Unrevealed;
         }
 
-        // get random number from revealed epoch
-        uint256 entityRange = uint256(
+        // get random number from resolved epoch
+        uint256 entityRange = (uint256(
             keccak256(
                 abi.encodePacked(
                     epochPerEpochIndex[epochPerToken[_tokenId]].randomness
                 )
             )
-        ) % 100;
-
+        ) % 100) + 1;
         // 80% chance of Gatherer
         if (entityRange < 80) {
             return Entity.Gatherer;
@@ -242,7 +241,7 @@ contract GatherGambit is IGatherGambit, ERC721A, Ownable {
             // If epoch has not been committed,
             currentEpoch.committed == false ||
             // Or the reveal commitment timed out.
-            (currentEpoch.revealed == false &&
+            (currentEpoch.resolved == false &&
                 currentEpoch.revealBlock < block.number - 256)
         ) {
             // This means the epoch has not been committed, OR the epoch was committed but has expired.
@@ -250,7 +249,7 @@ contract GatherGambit is IGatherGambit, ERC721A, Ownable {
             currentEpoch.revealBlock = uint64(block.number + 50);
             currentEpoch.committed = true;
         } else if (block.number > currentEpoch.revealBlock) {
-            // Epoch has been committed and is within range to be revealed.
+            // Epoch has been committed and is within range to be resolved.
             // Set its randomness to the target block hash.
             currentEpoch.randomness = uint128(
                 uint256(
@@ -262,7 +261,7 @@ contract GatherGambit is IGatherGambit, ERC721A, Ownable {
                     )
                 ) % (2 ** 128 - 1)
             );
-            currentEpoch.revealed = true;
+            currentEpoch.resolved = true;
 
             // Notify DAPPs about the new epoch.
             emit NewEpoch(_epochIndex, currentEpoch.revealBlock);
