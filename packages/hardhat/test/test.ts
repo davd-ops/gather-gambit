@@ -1,8 +1,9 @@
 import { BigNumber, Signer } from "ethers";
-import { Berries, GatherGambit, BerryLands } from "../typechain-types/index";
+import { Berries, GatherGambit, BerryLands, SereneSettlements } from "../typechain-types/index";
 import BerriesArtifact from "../artifacts/contracts/Berries.sol/Berries.json";
 import GatherGambitArtifact from "../artifacts/contracts/GatherGambit.sol/GatherGambit.json";
 import BerryLandsArtifact from "../artifacts/contracts/BerryLands.sol/BerryLands.json";
+import SereneSettlementsArtifact from "../artifacts/contracts/SereneSettlements.sol/SereneSettlements.json";
 import { ethers, waffle } from "hardhat";
 import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
@@ -18,23 +19,24 @@ let random: SignerWithAddress;
 let Berries: Berries;
 let GatherGambit: GatherGambit;
 let BerryLands: BerryLands;
+let SereneSettlements: SereneSettlements;
 let gathererIndex = 1;
 let protectorIndex = 1;
 let wolfIndex = 1;
 
 const mintGatherer = async () => {
-  await GatherGambit.mint(contractOwner.address, "1");
+  await GatherGambit.mint(contractOwner.address);
   await mine(55);
   await GatherGambit.resolveEpochIfNecessary();
   const entity = await GatherGambit.getEntity(gathererIndex);
-
+  
   if (entity !== 1) {
     gathererIndex++;
     await mintGatherer();
   }
 };
 const mintProtector = async () => {
-  await GatherGambit.mint(contractOwner.address, "1");
+  await GatherGambit.mint(contractOwner.address);
   await mine(55);
   await GatherGambit.resolveEpochIfNecessary();
   const entity = await GatherGambit.getEntity(protectorIndex);
@@ -45,7 +47,7 @@ const mintProtector = async () => {
   }
 };
 const mintWolf = async () => {
-  await GatherGambit.mint(contractOwner.address, "1");
+  await GatherGambit.mint(contractOwner.address);
   await mine(55);
   await GatherGambit.resolveEpochIfNecessary();
   const entity = await GatherGambit.getEntity(wolfIndex);
@@ -71,9 +73,15 @@ describe("Initialization of core functions", function () {
       GatherGambit.address,
       Berries.address,
     ])) as BerryLands;
+
+    SereneSettlements = (await deployContract(
+      contractOwner,
+      SereneSettlementsArtifact,
+      [GatherGambit.address, Berries.address]
+    )) as SereneSettlements;
   });
 
-  describe.skip("Berries Contract", function () {
+  describe("Berries Contract", function () {
     describe("General Stuff", function () {
       it("should have proper owner", async function () {
         expect(await Berries.owner()).to.equal(contractOwner.address);
@@ -130,7 +138,7 @@ describe("Initialization of core functions", function () {
       await mine(1000);
       await Berries.addController(BerryLands.address);
     });
-    describe.skip("General Stuff", function () {
+    describe("General Stuff", function () {
       it("should have proper owner", async function () {
         expect(await GatherGambit.owner()).to.equal(contractOwner.address);
       });
@@ -144,41 +152,48 @@ describe("Initialization of core functions", function () {
         expect(await GatherGambit.balanceOf(contractOwner.address)).to.equal(
           BigNumber.from("0")
         );
-        await GatherGambit.mint(contractOwner.address, "10");
+        await GatherGambit.mint(contractOwner.address);
         expect(await GatherGambit.balanceOf(contractOwner.address)).to.equal(
-          BigNumber.from("10")
+          BigNumber.from("1")
         );
       });
       it("burn()", async function () {
-        await GatherGambit.mint(contractOwner.address, "10");
+        await GatherGambit.mint(contractOwner.address);
         await GatherGambit.burn("1");
         expect(await GatherGambit.balanceOf(contractOwner.address)).to.equal(
-          BigNumber.from("9")
+          BigNumber.from("0")
         );
       });
       it("not approved burn()", async function () {
-        await GatherGambit.mint(contractOwner.address, "10");
+        await GatherGambit.mint(contractOwner.address);
         await expect(GatherGambit.connect(user).burn("1")).to.be.revertedWith(
           "TransferCallerNotOwnerNorApproved()"
         );
         expect(await GatherGambit.balanceOf(contractOwner.address)).to.equal(
-          BigNumber.from("10")
+          BigNumber.from("1")
         );
       });
       it("burnBatch()", async function () {
-        await GatherGambit.mint(contractOwner.address, "10");
-        await GatherGambit.burnBatch([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+        await GatherGambit.mint(contractOwner.address);
+        await GatherGambit.mint(contractOwner.address);
+        await GatherGambit.mint(contractOwner.address);
+        await GatherGambit.mint(contractOwner.address);
+        await GatherGambit.burnBatch([1, 2, 3, 4]);
         expect(await GatherGambit.balanceOf(contractOwner.address)).to.equal(
           BigNumber.from("0")
         );
       });
       it("not approved burnBatch()", async function () {
-        await GatherGambit.mint(contractOwner.address, "10");
+        await GatherGambit.mint(contractOwner.address);
+        await GatherGambit.mint(contractOwner.address);
+        await GatherGambit.mint(contractOwner.address);
+        await GatherGambit.mint(contractOwner.address);
+        await GatherGambit.mint(contractOwner.address);
         await expect(
-          GatherGambit.connect(user).burnBatch([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+          GatherGambit.connect(user).burnBatch([1, 2, 3, 4, 5])
         ).to.be.revertedWith("TransferCallerNotOwnerNorApproved()");
         expect(await GatherGambit.balanceOf(contractOwner.address)).to.equal(
-          BigNumber.from("10")
+          BigNumber.from("5")
         );
       });
       it("resolveEpochIfNecessary()", async function () {
@@ -188,14 +203,14 @@ describe("Initialization of core functions", function () {
         );
       });
       it("getEntity()", async function () {
-        await GatherGambit.mint(contractOwner.address, "10");
+        await GatherGambit.mint(contractOwner.address);
         expect(await GatherGambit.getEntity(1)).to.equal(BigNumber.from("0"));
       });
       it("tokenURI()", async function () {
         await expect(GatherGambit.tokenURI(1)).to.be.revertedWith(
           "QueryForNonexistentToken()"
         );
-        await GatherGambit.mint(contractOwner.address, "1");
+        await GatherGambit.mint(contractOwner.address);
         expect(await GatherGambit.tokenURI(1)).to.be.equal(
           "data:application/json;base64,eyJuYW1lIjogIlVucmV2ZWFsZWQgIzEiLCAiZGVzY3JpcHRpb24iOiAiR2F0aGVyIEdhbWJpdCBnYW1lLiIsICJpbWFnZSI6ICJkYXRhOmltYWdlL3N2Zyt4bWw7YmFzZTY0LGFWWkNUMUozTUV0SFoyOUJRVUZCVGxOVmFFVlZaMEZCUVVOQlFVRkJRV2RCWjAxQlFVRkJUMFpLU201QlFVRkJSRVpDVFZaRlZVRkJRVUZ1U25salFVRkJRbFZXUmxSNmRFUTVkMEZCUVVGQldGSlRWR3hOUVZGUFlsbGFaMEZCUVVKV1NsSkZSbFZIVGs1cVIwUjVRVUpqWWxGb1ZFVTBSMEZaWTBGQlFXZExRVUUyYjFCVWNHZDNRVUZCUVVKS1VsVTFSWEpyU21kblp6MDkifQ=="
         );
@@ -219,21 +234,13 @@ describe("Initialization of core functions", function () {
       });
     });
     describe("BerryLands interaction", async function () {
-      beforeEach(async function () {
-        await expect(
-          GatherGambit.setStakingContract(BerryLands.address)
-        ).to.be.fulfilled;
-      });
       it("should be properly initialized", async function () {
-        expect(await GatherGambit.getStakingContract()).to.equal(
-          BerryLands.address
-        );
         expect(await BerryLands.getGambitContract()).to.equal(
           GatherGambit.address
         );
         expect(await BerryLands.getBerriesContract()).to.equal(Berries.address);
       });
-      describe.skip("enterBerryLands()", async function () {
+      describe("enterBerryLands()", async function () {
         beforeEach(async function () {
           gathererIndex = 1;
           await mintGatherer();
@@ -259,13 +266,16 @@ describe("Initialization of core functions", function () {
           });
         });
         describe("WhisperingWoods", async function () {
+          beforeEach(async function () {
+            gathererIndex = 1;
+            await mintGatherer();
+          });
           it("should revert if not exist", async function () {
             await expect(BerryLands.enterBerryLands(10, 0)).to.be.revertedWith(
               "QueryForNonexistentToken()"
             );
           });
           it("should revert if not approved", async function () {
-            await GatherGambit.mint(contractOwner.address, "1");
             await expect(
               BerryLands.enterBerryLands(gathererIndex, 1)
             ).to.be.revertedWith("TransferCallerNotOwnerNorApproved()");
@@ -280,7 +290,7 @@ describe("Initialization of core functions", function () {
           });
         });
       });
-      describe.skip("exitBerryLands()", async function () {
+      describe("exitBerryLands()", async function () {
         it("getClaimableBerries()", async function () {
           gathererIndex = 1;
           await mintGatherer();
@@ -352,7 +362,7 @@ describe("Initialization of core functions", function () {
           });
         });
       });
-      describe.skip("Protector interaction", async function () {
+      describe("Protector interaction", async function () {
         describe("FertileFields", async function () {
           beforeEach(async function () {
             gathererIndex = 1;
@@ -629,7 +639,44 @@ describe("Initialization of core functions", function () {
       });
     });
     describe("SereneSettlements interaction [reproduction]", async function () {
+      beforeEach(async function () {
+        await expect(
+          GatherGambit.setReproductionContract(SereneSettlements.address)
+        ).to.be.fulfilled;
 
+        gathererIndex = 1;
+        await mintGatherer();
+
+        await Berries.mint(contractOwner.address, ethers.utils.parseEther('10000'));
+      });
+      it("should be properly initialized", async function () {
+        expect(await GatherGambit.getReproductionContract()).to.equal(
+          SereneSettlements.address
+        );
+        expect(await SereneSettlements.getGambitContract()).to.equal(
+          GatherGambit.address
+        );
+        expect(await SereneSettlements.getBerriesContract()).to.equal(Berries.address);
+      });
+      it("initiateReproduction()", async function () {
+        await mintGatherer();
+        const gathererIndex1 = gathererIndex.toString();
+        ++gathererIndex;
+        await mintGatherer();
+        const gathererIndex2 = gathererIndex.toString();        
+        
+        await GatherGambit.approve(SereneSettlements.address, gathererIndex1);
+        await GatherGambit.approve(SereneSettlements.address, gathererIndex2);
+        await Berries.approve(SereneSettlements.address, ethers.utils.parseEther('10000'));
+        await SereneSettlements.initiateReproduction([gathererIndex1, gathererIndex2]);
+        expect(await GatherGambit.ownerOf(gathererIndex1)).to.equal(
+          SereneSettlements.address
+        );
+        expect(await GatherGambit.ownerOf(gathererIndex2)).to.equal(
+          SereneSettlements.address
+        );
+        expect(await Berries.totalSupply()).to.be.equal("0")
+      });
     });
   });
 });

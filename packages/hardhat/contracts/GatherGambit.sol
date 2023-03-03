@@ -3,7 +3,6 @@ pragma solidity 0.8.19;
 
 import "erc721a/contracts/ERC721A.sol";
 import "./IGatherGambit.sol";
-// import "@openzeppelin/contracts/token/ERC721/ERC20.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
@@ -24,13 +23,14 @@ contract GatherGambit is IGatherGambit, ERC721A, Ownable {
     // ========================================
 
     error QueryForNonexistentToken();
+    error OnlyReproductionContractCanMint();
 
     // ========================================
     //     VARIABLE DEFINITIONS
     // ========================================
 
     uint256 private _epochIndex; // The current epoch index
-    address private _stakingContract; // The address of the staking contract
+    address private _reproductionContract; // The address of the reproduction contract
 
     mapping(uint256 => uint256) epochPerToken; // The epoch index of each token
     mapping(uint256 => Epoch) epochPerEpochIndex; // The epoch per each epoch index
@@ -45,22 +45,19 @@ contract GatherGambit is IGatherGambit, ERC721A, Ownable {
 
     /**
      * @notice Mints a token.
+     * @notice First 1000 are for anyone, after that only the reproduction contract can mint.
      * @param _address The address to mint the token to.
-     * @param _amount The amount of tokens to mint.
      */
-    function mint(address _address, uint256 _amount) external onlyOwner {
+    function mint(address _address) external {
+        if (_nextTokenId() > 1000 && msg.sender != _reproductionContract) revert OnlyReproductionContractCanMint();
         resolveEpochIfNecessary();
 
         uint256 intialTokenId = _nextTokenId();
         uint256 nextTokenId = intialTokenId;
 
-        for (; nextTokenId < intialTokenId + _amount; ) {
-            epochPerToken[nextTokenId] = _epochIndex;
-            unchecked {
-                ++nextTokenId;
-            }
-        }
-        _mint(_address, _amount);
+        epochPerToken[nextTokenId] = _epochIndex;
+
+        _mint(_address, 1);
     }
 
     /**
@@ -159,13 +156,13 @@ contract GatherGambit is IGatherGambit, ERC721A, Ownable {
     // ========================================
 
     /**
-     * @notice Sets the staking contract address.
-     * @param _stakingContractAddress The address of the staking contract.
+     * @notice Sets the reproduction contract address.
+     * @param _reproductionContractAddress The address of the reproduction contract.
      */
-    function setStakingContract(
-        address _stakingContractAddress
+    function setReproductionContract(
+        address _reproductionContractAddress
     ) external onlyOwner {
-        _stakingContract = _stakingContractAddress;
+        _reproductionContract = _reproductionContractAddress;
     }
 
     // ========================================
@@ -173,10 +170,10 @@ contract GatherGambit is IGatherGambit, ERC721A, Ownable {
     // ========================================
 
     /**
-     * @notice Returns the staking contract address.
+     * @notice Returns the reproduction contract address.
      */
-    function getStakingContract() external view returns (address) {
-        return _stakingContract;
+    function getReproductionContract() external view returns (address) {
+        return _reproductionContract;
     }
 
     /**

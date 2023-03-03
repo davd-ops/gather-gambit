@@ -20,7 +20,7 @@ interface IGatherGambit is IERC721A {
         bool resolved; // Whether the epoch has been resolved
     }
 
-    function mint(address _address, uint256 _amount) external;
+    function mint(address _address) external;
 
     function burn(uint256 _tokenId) external;
 
@@ -30,9 +30,9 @@ interface IGatherGambit is IERC721A {
 
     function resolveEpochIfNecessary () external;
 
-    function setStakingContract(address _stakingContractAddress) external;
+    function setReproductionContract(address _stakingContractAddress) external;
 
-    function getStakingContract() external view returns (address);
+    function getReproductionContract() external view returns (address);
 
     function getCurrentEpochIndex() external view returns (uint256);
 
