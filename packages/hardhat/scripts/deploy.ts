@@ -1,18 +1,47 @@
 import { ethers } from "hardhat";
 
 async function main() {
-  const currentTimestampInSeconds = Math.round(Date.now() / 1000);
-  const ONE_YEAR_IN_SECS = 365 * 24 * 60 * 60;
-  const unlockTime = currentTimestampInSeconds + ONE_YEAR_IN_SECS;
+  // Berries
+  const Berries = await ethers.getContractFactory("Berries");
+  const berries = await Berries.deploy();
 
-  const lockedAmount = ethers.utils.parseEther("1");
+  await berries.deployed();
 
-  const Lock = await ethers.getContractFactory("Lock");
-  const lock = await Lock.deploy(unlockTime, { value: lockedAmount });
+  console.log("berries to:", berries.address);
 
-  await lock.deployed();
+  // GatherGambit
+  const GatherGambit = await ethers.getContractFactory("GatherGambit");
+  const gatherGambit = await GatherGambit.deploy();
 
-  console.log("Lock with 1 ETH deployed to:", lock.address);
+  await gatherGambit.deployed();
+
+  console.log("gatherGambit deployed to:", gatherGambit.address);
+
+  // BerryLands
+
+  const BerryLands = await ethers.getContractFactory("BerryLands");
+  const berryLands = await BerryLands.deploy(
+    gatherGambit.address,
+    berries.address
+  );
+
+  await berryLands.deployed();
+
+  console.log("berryLands deployed to:", berryLands.address);
+
+  // SereneSettlements
+
+  const SereneSettlements = await ethers.getContractFactory(
+    "SereneSettlements"
+  );
+  const sereneSettlements = await SereneSettlements.deploy(
+    gatherGambit.address,
+    berries.address
+  );
+
+  await sereneSettlements.deployed();
+
+  console.log("sereneSettlements deployed to:", sereneSettlements.address);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

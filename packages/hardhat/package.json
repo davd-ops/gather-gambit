@@ -8,7 +8,7 @@
     "chain": "hardhat node --network hardhat",
     "test": "hardhat compile && hardhat test --network hardhat",
     "compile": "hardhat compile",
-    "deploy": "hardhat deploy --export-all ../react-app/src/contracts/hardhat_contracts.json",
+    "deploy": "hardhat deploy --export-all ./output/hardhat_contracts.json",
     "generate": "hardhat generate",
     "account": "hardhat account",
     "verify": "hardhat verify"
