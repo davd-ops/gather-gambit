@@ -1,14 +1,9 @@
-import { getAccount, getProvider, readContract } from '@wagmi/core';
-
-import { useContractRead, useAccount } from 'wagmi';
+import { readContract } from '@wagmi/core';
+import Image from 'next/image';
+import { useEffect, useState } from 'react';
+import { useAccount, useContractRead } from 'wagmi';
 
 import deployedContracts from '@/lib/hardhat_contracts.json';
-import { useEffect, useState } from 'react';
-
-import Image from 'next/image';
-
-// contracts
-const provider = getProvider();
 
 const Entity = {
   0: 'Unrevealed',
@@ -25,20 +20,16 @@ const Home = () => {
 
   const { address } = useAccount();
 
-  const [profile, setProfile] = useState();
-
   useEffect(() => {
     if (address) {
       setIsLoggedIn(true);
     }
   }, [address]);
 
-  console.log(address);
-
   const {
     data: gatherGambitData,
-    isError: gatherGambitError,
-    isLoading: gatherGambitIsLoading,
+    // isError: gatherGambitError,
+    // isLoading: gatherGambitIsLoading,
   } = useContractRead({
     address: '0xD92Ff95c3bd9b27DB37eCe08712939bDcA67F9Dc',
     abi: deployedContracts[80001][0].contracts.GatherGambit.abi,
@@ -47,7 +38,6 @@ const Home = () => {
   });
 
   const getEntity = async (tokenId) => {
-    console.log('Called');
     const gatherGambitGetEntityData = await readContract({
       address:
         deployedContracts[80001][0].contracts.GatherGambit.address.toString(),
@@ -55,7 +45,6 @@ const Home = () => {
       functionName: 'getEntity',
       args: [tokenId],
     });
-    console.log({ gatherGambitGetEntityData });
     return gatherGambitGetEntityData;
   };
 
@@ -63,7 +52,6 @@ const Home = () => {
     gatherGambitData &&
       gatherGambitData.map((d, index) => {
         getEntity(parseInt(d)).then((r) => {
-          console.log('@@@@@@@@2', r);
           setLoadEntity((prev) => ({ ...prev, [index]: r }));
         });
       });
@@ -72,8 +60,6 @@ const Home = () => {
   if (!isLoggedIn) {
     return <p className='text-center'>Loading... Please connect your wallet</p>;
   }
-
-  console.log('LAAAAAAAAAAAAA', loadEntity);
 
   return (
     <div className='mx-auto max-w-2xl space-y-8'>
