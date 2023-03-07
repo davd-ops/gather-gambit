@@ -1,4 +1,4 @@
-import { getAccount, getProvider } from '@wagmi/core';
+import { getAccount, getProvider, readContract } from '@wagmi/core';
 
 import { useContractRead, useAccount } from 'wagmi';
 
@@ -10,11 +10,22 @@ import Image from 'next/image';
 // contracts
 const provider = getProvider();
 
+const Entity = {
+  0: 'Unrevealed',
+  1: 'Gatherer',
+  2: 'Protector',
+  3: 'Wolf',
+};
+
 const Home = () => {
   // const account = getAccount();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
+  const [loadEntity, setLoadEntity] = useState();
+
   const { address } = useAccount();
+
+  const [profile, setProfile] = useState();
 
   useEffect(() => {
     if (address) {
@@ -35,21 +46,34 @@ const Home = () => {
     args: [address],
   });
 
-  // const {
-  //   data: gatherGambitData,
-  //   isError: gatherGambitError,
-  //   isLoading: gatherGambitIsLoading,
-  // } = useContractRead({
-  //   address:
-  //     deployedContracts[80001][0].contracts.GatherGambit.address.toString(),
-  //   abi: deployedContracts[80001][0].contracts.GatherGambit.abi,
-  //   functionName: 'tokensOfOwner',
-  //   args: [address],
-  // });
+  const getEntity = async (tokenId) => {
+    console.log('Called');
+    const gatherGambitGetEntityData = await readContract({
+      address:
+        deployedContracts[80001][0].contracts.GatherGambit.address.toString(),
+      abi: deployedContracts[80001][0].contracts.GatherGambit.abi,
+      functionName: 'getEntity',
+      args: [tokenId],
+    });
+    console.log({ gatherGambitGetEntityData });
+    return gatherGambitGetEntityData;
+  };
+
+  useEffect(() => {
+    gatherGambitData &&
+      gatherGambitData.map((d, index) => {
+        getEntity(parseInt(d)).then((r) => {
+          console.log('@@@@@@@@2', r);
+          setLoadEntity((prev) => ({ ...prev, [index]: r }));
+        });
+      });
+  }, [gatherGambitData]);
 
   if (!isLoggedIn) {
     return <p className='text-center'>Loading... Please connect your wallet</p>;
   }
+
+  console.log('LAAAAAAAAAAAAA', loadEntity);
 
   return (
     <div className='mx-auto max-w-2xl space-y-8'>
@@ -63,13 +87,14 @@ const Home = () => {
       {/* Dashboad */}
       <div>
         <p>Dashboard</p>
-        <div className='ml-8'>
+        <div className='px-8'>
           <p>My GatherGambit Tokens</p>
           <div className='grid grid-cols-2 gap-2 md:grid-cols-4'>
             {gatherGambitData &&
               // <pre>{JSON.stringify(gatherGambitData, null, 2)}</pre>
               gatherGambitData.map((d, index) => (
                 <div key={index}>
+                  {/* {getEntity(d, index)} */}
                   <div className=''>
                     <Image
                       alt=''
@@ -79,6 +104,7 @@ const Home = () => {
                       style={{ objectFit: 'cover' }}
                     />
                     tokenId: {parseInt(d)}
+                    Entity: {loadEntity && Entity[loadEntity[index]]}
                   </div>
                 </div>
               ))}
