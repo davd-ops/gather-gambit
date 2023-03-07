@@ -35,6 +35,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-icons": "^4.7.1",
+    "react-select": "^5.7.0",
     "siwe": "^1.1.6",
     "sonner": "^0.1.6",
     "tailwind-merge": "^1.9.1",

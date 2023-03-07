@@ -1,8 +1,15 @@
 import { readContract } from '@wagmi/core';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
+import Select from 'react-select';
 import { toast } from 'sonner';
-import { useAccount, useContract, useContractRead, useSigner } from 'wagmi';
+import {
+  useAccount,
+  useContract,
+  useContractEvent,
+  useContractRead,
+  useSigner,
+} from 'wagmi';
 
 import deployedContracts from '@/lib/hardhat_contracts.json';
 
@@ -13,10 +20,24 @@ const Entity = {
   3: 'Wolf',
 };
 
+const locationObject = [
+  {
+    value: 0,
+    label: 'Fertile Field',
+  },
+  {
+    value: 1,
+    label: 'Whispering Woods',
+  },
+];
+
 const Home = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [loadEntity, setLoadEntity] = useState();
   const [mintLoading, setmintLoading] = useState(false);
+  const [berriesLoading, setBerryLoading] = useState(false);
+  const [loadEntity, setLoadEntity] = useState();
+  const [gatherTokenId, setGatherTokenId] = useState();
+  const [location, setLocation] = useState(0);
   const { address } = useAccount();
   const { data: signer } = useSigner();
 
@@ -27,6 +48,17 @@ const Home = () => {
       setIsLoggedIn(false);
     }
   }, [address]);
+
+  // Events
+
+  useContractEvent({
+    address: deployedContracts[80001][0].contracts.GatherGambit.address,
+    abi: deployedContracts[80001][0].contracts.GatherGambit.abi,
+    eventName: 'NewEpoch',
+    listener(node, label, owner) {
+      console.log(node, label, owner);
+    },
+  });
 
   // Getters GatherGambit
 
@@ -56,6 +88,16 @@ const Home = () => {
   const gatherGambitContract = useContract({
     address: deployedContracts[80001][0].contracts.GatherGambit.address,
     abi: deployedContracts[80001][0].contracts.GatherGambit.abi,
+    signerOrProvider: signer,
+  });
+
+  // Setters BerryLands
+  const berryLandsAddress =
+    deployedContracts[80001][0].contracts.BerryLands.address;
+
+  const berrriesLandContract = useContract({
+    address: berryLandsAddress,
+    abi: deployedContracts[80001][0].contracts.BerryLands.abi,
     signerOrProvider: signer,
   });
 
@@ -126,14 +168,75 @@ const Home = () => {
         </div>
       </div>
       <div>
-        <div className='ml-8 space-y-4'>
+        <div className='ml-8 space-y-4 '>
           <p>Gather in Fertile Land</p>
           <ul className='ml-8 list-disc'>
             <li>Yield: 2000 $BERRY/day</li>
             <li>If caught, gatherer loses all of his berries</li>
             <li>If caught while protected, loses only 40% of his berries</li>
           </ul>
-          <button className='btn-primary btn'>Gather in Fertile Land</button>
+          <hr />
+          <p>Whispering Woods</p>
+          <ul className='ml-8 list-disc'>
+            <li>Yield: 5000 $BERRY/day</li>
+            <li>
+              If caught, gatherer is killed, wolves steal all of his berries
+            </li>
+            <li>
+              If caught while protected, loses 70% of his berries, 5% chance to
+              kill the wolf
+            </li>
+          </ul>
+
+          <Select
+            options={locationObject}
+            defaultValue={locationObject[0]}
+            onChange={(e) => setLocation(e.value)}
+          />
+
+          <div className='grid grid-cols-2 gap-2'>
+            <input
+              type='number'
+              placeholder='Enter Gather token id'
+              className='input-bordered input-primary input w-full max-w-xs'
+              value={gatherTokenId}
+              onChange={(e) => setGatherTokenId(e.target.value)}
+            />
+
+            <button
+              onClick={async () => {
+                setBerryLoading(true);
+                if (!gatherTokenId) {
+                  toast.error('Please enter Gather token');
+                  return;
+                }
+                try {
+                  await (
+                    await gatherGambitContract.approve(
+                      berryLandsAddress,
+                      gatherTokenId
+                    )
+                  ).wait();
+
+                  await (
+                    await berrriesLandContract.enterBerryLands(
+                      gatherTokenId,
+                      location
+                    )
+                  ).wait();
+                } catch (e) {
+                  toast.error(e.message);
+                  console.error(e);
+                }
+                setBerryLoading(false);
+              }}
+              className='btn-primary btn'
+            >
+              {berriesLoading
+                ? 'Loading...'
+                : `Gather in ${locationObject[location].label}`}
+            </button>
+          </div>
 
           {/* Enter into Berry land */}
           {/* Approve on the GatherGambit */}
