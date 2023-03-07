@@ -1,6 +1,7 @@
 // pages/_app.js
 import { ConnectKitProvider, getDefaultClient } from 'connectkit';
 import type { AppProps } from 'next/app';
+import { Toaster } from 'sonner';
 import { createClient, WagmiConfig } from 'wagmi';
 import {
   arbitrum,
@@ -45,6 +46,7 @@ function MyApp({ Component, pageProps }: AppProps) {
       <WagmiConfig client={client}>
         <ConnectKitProvider theme='retro'>
           <Layout>
+            <Toaster />
             <Component {...pageProps} />
           </Layout>
         </ConnectKitProvider>

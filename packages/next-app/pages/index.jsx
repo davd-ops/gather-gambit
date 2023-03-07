@@ -1,7 +1,8 @@
 import { readContract } from '@wagmi/core';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
-import { useAccount, useContractRead } from 'wagmi';
+import { toast } from 'sonner';
+import { useAccount, useContract, useContractRead, useSigner } from 'wagmi';
 
 import deployedContracts from '@/lib/hardhat_contracts.json';
 
@@ -13,25 +14,28 @@ const Entity = {
 };
 
 const Home = () => {
-  // const account = getAccount();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-
   const [loadEntity, setLoadEntity] = useState();
-
+  const [mintLoading, setmintLoading] = useState(false);
   const { address } = useAccount();
+  const { data: signer } = useSigner();
 
   useEffect(() => {
     if (address) {
       setIsLoggedIn(true);
+    } else {
+      setIsLoggedIn(false);
     }
   }, [address]);
+
+  // Getters GatherGambit
 
   const {
     data: gatherGambitData,
     // isError: gatherGambitError,
     // isLoading: gatherGambitIsLoading,
   } = useContractRead({
-    address: '0xD92Ff95c3bd9b27DB37eCe08712939bDcA67F9Dc',
+    address: deployedContracts[80001][0].contracts.GatherGambit.address,
     abi: deployedContracts[80001][0].contracts.GatherGambit.abi,
     functionName: 'tokensOfOwner',
     args: [address],
@@ -39,14 +43,21 @@ const Home = () => {
 
   const getEntity = async (tokenId) => {
     const gatherGambitGetEntityData = await readContract({
-      address:
-        deployedContracts[80001][0].contracts.GatherGambit.address.toString(),
+      address: deployedContracts[80001][0].contracts.GatherGambit.address,
       abi: deployedContracts[80001][0].contracts.GatherGambit.abi,
       functionName: 'getEntity',
       args: [tokenId],
     });
     return gatherGambitGetEntityData;
   };
+
+  // Setters GatherGambit
+
+  const gatherGambitContract = useContract({
+    address: deployedContracts[80001][0].contracts.GatherGambit.address,
+    abi: deployedContracts[80001][0].contracts.GatherGambit.abi,
+    signerOrProvider: signer,
+  });
 
   useEffect(() => {
     gatherGambitData &&
@@ -58,16 +69,33 @@ const Home = () => {
   }, [gatherGambitData]);
 
   if (!isLoggedIn) {
-    return <p className='text-center'>Loading... Please connect your wallet</p>;
+    return (
+      <p className='text-center'>Loading.... Please connect your wallet</p>
+    );
   }
 
   return (
-    <div className='mx-auto max-w-2xl space-y-8'>
+    <div className='mx-auto max-w-2xl space-y-8 p-4'>
       {/* Mint GatherGambit */}
       <div>
         <p>Choose you destiny</p>
         <p>You can be Gather, Protector or Wolf</p>
-        <button className='btn'>mint</button>
+        <button
+          className='btn mt-4'
+          onClick={async () => {
+            setmintLoading(true);
+            try {
+              await (await gatherGambitContract.mint(address)).wait();
+              setmintLoading(false);
+              toast.success('Successfully minted!');
+            } catch (error) {
+              console.log(error);
+              toast.error(error);
+            }
+          }}
+        >
+          {mintLoading ? 'Loading...' : 'Mint'}
+        </button>
       </div>
       {/* Gather */}
       {/* Dashboad */}
@@ -89,8 +117,8 @@ const Home = () => {
                       height={200}
                       style={{ objectFit: 'cover' }}
                     />
-                    tokenId: {parseInt(d)}
-                    Entity: {loadEntity && Entity[loadEntity[index]]}
+                    <p> tokenId: {parseInt(d)}</p>
+                    <p> Entity: {loadEntity && Entity[loadEntity[index]]}</p>
                   </div>
                 </div>
               ))}
