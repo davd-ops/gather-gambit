@@ -1,15 +1,10 @@
 import { ConnectKitButton } from 'connectkit';
 import * as React from 'react';
 
-import UnstyledLink from '@/components/links/UnstyledLink';
-
 export default function Header() {
   return (
     <header className='sticky top-0 z-50'>
-      <div className='layout flex h-14 items-center justify-between'>
-        <UnstyledLink href='/' className='font-bold hover:text-gray-600'>
-          Home
-        </UnstyledLink>
+      <div className='layout flex items-center justify-between'>
         <nav>
           <ul className='flex items-center justify-between space-x-4'>
             <div

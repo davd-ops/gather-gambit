@@ -1,5 +1,5 @@
 import { Dialog, Transition } from '@headlessui/react';
-import { inter } from 'pages/_app';
+// import { inter } from 'pages/_app';
 import { Fragment, useRef } from 'react';
 
 import { PixelButton } from '@/components/PixelButton';
@@ -33,9 +33,7 @@ export default function Modal({
           <div className='fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity' />
         </Transition.Child>
 
-        <div
-          className={`fixed inset-0 z-10 overflow-y-auto ${inter.className}`}
-        >
+        <div className='fixed inset-0 z-10 overflow-y-auto'>
           <div className='flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0'>
             <Transition.Child
               as={Fragment}
