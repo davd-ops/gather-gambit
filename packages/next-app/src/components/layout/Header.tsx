@@ -8,6 +8,8 @@ export default function Header() {
       <div className='layout flex items-center justify-between'>
         <ButtonLink href='/'>Home</ButtonLink>
         <ButtonLink href='/gameplay'>Game Play</ButtonLink>
+        <ButtonLink href='/myBerries'>Berries</ButtonLink>
+
         <nav>
           <ul className='flex items-center justify-between space-x-4'>
             <div

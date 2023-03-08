@@ -106,7 +106,7 @@ const GamePlay = () => {
           ))}
       </div>
       {/* initiate Attack */}
-      <div className='mx-auto max-w-2xl '>
+      <div className='mx-auto mt-8 max-w-2xl '>
         <p>If you are wolf you can attack gathers for </p>
         <ul className='ml-8 list-disc'>
           <li>Get 40% of his collected $BERRIES if they are protected</li>
@@ -129,6 +129,10 @@ const GamePlay = () => {
               onChange={(e) => setTokenId(e.target.value)}
             />
 
+            <p>
+              Location:{location} id: {tokenId}
+            </p>
+
             <button
               className='btn'
               onClick={async () => {
@@ -143,16 +147,20 @@ const GamePlay = () => {
                   await (
                     await berrriesLandContract.initiateAttack(tokenId, location)
                   ).wait();
-
-                  localStorage.setItem(
-                    'Attacker',
-                    JSON.stringify({
+                  let items = JSON.parse(localStorage.getItem('attack'));
+                  let newItems = JSON.stringify([
+                    {
                       tokenId: tokenId,
                       attackerAddress: address,
                       location: location,
-                    })
-                  );
-
+                    },
+                  ]);
+                  if (items) {
+                    items.push(newItems);
+                    localStorage.setItem('attack', JSON.stringify(items));
+                  } else {
+                    localStorage.setItem('attack', newItems);
+                  }
                   toast.success('Attack initiated successfully');
                 } catch (e) {
                   toast.error(e.message);
@@ -160,6 +168,55 @@ const GamePlay = () => {
               }}
             >
               initiateAttack
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Exit Berry Land */}
+      <div className='mx-auto mt-8 max-w-2xl '>
+        <p>Exit Berry land and claim your tasty berries </p>
+
+        <div className='mx-auto max-w-lg space-y-8 p-2'>
+          <Select
+            options={locationObject}
+            defaultValue={locationObject[0]}
+            onChange={(e) => setLocation(e.value)}
+          />
+
+          <div className='grid grid-cols-2 gap-2'>
+            <input
+              type='number'
+              placeholder='Enter Gather token id'
+              className='input-bordered input-primary input w-full max-w-xs'
+              value={tokenId}
+              onChange={(e) => setTokenId(e.target.value)}
+            />
+
+            <button
+              className='btn-secondary btn'
+              onClick={async () => {
+                try {
+                  // await (
+                  //   await gatherGambitContract.approve(
+                  //     berryLandsAddress,
+                  //     tokenId
+                  //   )
+                  // ).wait();
+
+                  toast.success(tokenId, location);
+
+                  await (
+                    await berrriesLandContract.exitBerryLands(tokenId, 0)
+                  ).wait();
+
+                  toast.success('Exit successfully');
+                } catch (e) {
+                  toast.error(e.message);
+                }
+              }}
+            >
+              Exit Berry Lands
             </button>
           </div>
         </div>

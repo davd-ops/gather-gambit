@@ -1,5 +1,10 @@
 import { BigNumber, Signer } from "ethers";
-import { Berries, GatherGambit, BerryLands, SereneSettlements } from "../typechain-types/index";
+import {
+  Berries,
+  GatherGambit,
+  BerryLands,
+  SereneSettlements,
+} from "../typechain-types/index";
 import BerriesArtifact from "../artifacts/contracts/Berries.sol/Berries.json";
 import GatherGambitArtifact from "../artifacts/contracts/GatherGambit.sol/GatherGambit.json";
 import BerryLandsArtifact from "../artifacts/contracts/BerryLands.sol/BerryLands.json";
@@ -29,7 +34,7 @@ const mintGatherer = async () => {
   await mine(55);
   await GatherGambit.resolveEpochIfNecessary();
   const entity = await GatherGambit.getEntity(gathererIndex);
-  
+
   if (entity !== 1) {
     gathererIndex++;
     await mintGatherer();
@@ -152,9 +157,15 @@ describe("Initialization of core functions", function () {
         expect(await GatherGambit.balanceOf(contractOwner.address)).to.equal(
           BigNumber.from("0")
         );
-        await GatherGambit.mint(contractOwner.address);
+        // await GatherGambit.mint(contractOwner.address);
+
+        for (let i = 1; i <= 5000; i++) {
+          await GatherGambit.mint(contractOwner.address);
+          let e = await GatherGambit.getEntity(i);
+          console.log(i, "-", e);
+        }
         expect(await GatherGambit.balanceOf(contractOwner.address)).to.equal(
-          BigNumber.from("1")
+          BigNumber.from("10")
         );
       });
       it("burn()", async function () {
@@ -523,19 +534,21 @@ describe("Initialization of core functions", function () {
               const claimable = await BerryLands.getClaimableBerries(
                 gathererIndex,
                 0
-              );       
+              );
               await BerryLands.resolveAttack(wolfIndex);
               expect(
                 (await BerryLands.getStakedGatherer(gathererIndex, 0))
                   .claimableBerries
               ).to.be.equal(0);
-              expect(await BerryLands.getClaimableBerries(
-                gathererIndex,
-                0
-              )).to.be.below(claimable);
+              expect(
+                await BerryLands.getClaimableBerries(gathererIndex, 0)
+              ).to.be.below(claimable);
               expect(
                 await Berries.balanceOf(contractOwner.address)
-              ).to.be.closeTo(claimable, ethers.BigNumber.from("500000000000000000"));
+              ).to.be.closeTo(
+                claimable,
+                ethers.BigNumber.from("500000000000000000")
+              );
               expect(await GatherGambit.ownerOf(wolfIndex)).to.equal(
                 contractOwner.address
               );
@@ -547,7 +560,7 @@ describe("Initialization of core functions", function () {
               const claimable = await BerryLands.getClaimableBerries(
                 gathererIndex,
                 0
-              );              
+              );
               const stolen = claimable
                 .mul(BigNumber.from("4"))
                 .div(BigNumber.from("10"));
@@ -556,17 +569,22 @@ describe("Initialization of core functions", function () {
               expect(
                 (await BerryLands.getStakedGatherer(gathererIndex, 0))
                   .claimableBerries
-              ).to.be.closeTo(userCut, ethers.BigNumber.from("500000000000000000"));
+              ).to.be.closeTo(
+                userCut,
+                ethers.BigNumber.from("500000000000000000")
+              );
               expect(
                 await Berries.balanceOf(contractOwner.address)
-              ).to.be.closeTo(stolen, ethers.BigNumber.from("500000000000000000"));;
+              ).to.be.closeTo(
+                stolen,
+                ethers.BigNumber.from("500000000000000000")
+              );
               expect(await GatherGambit.ownerOf(wolfIndex)).to.equal(
                 contractOwner.address
               );
-              expect(await BerryLands.getClaimableBerries(
-                gathererIndex,
-                0
-              )).to.be.below(claimable);
+              expect(
+                await BerryLands.getClaimableBerries(gathererIndex, 0)
+              ).to.be.below(claimable);
             });
           });
         });
@@ -593,18 +611,20 @@ describe("Initialization of core functions", function () {
               const claimable = await BerryLands.getClaimableBerries(
                 gathererIndex,
                 1
-              );              
+              );
               await BerryLands.resolveAttack(wolfIndex);
               expect(
-                (await BerryLands.getStakedGatherer(gathererIndex, 1))
-                  .owner
+                (await BerryLands.getStakedGatherer(gathererIndex, 1)).owner
               ).to.be.equal("0x0000000000000000000000000000000000000000");
-              await expect(GatherGambit.ownerOf(gathererIndex)).to.be.revertedWith(
-                "OwnerQueryForNonexistentToken()"
-              );
+              await expect(
+                GatherGambit.ownerOf(gathererIndex)
+              ).to.be.revertedWith("OwnerQueryForNonexistentToken()");
               expect(
                 await Berries.balanceOf(contractOwner.address)
-              ).to.be.closeTo(claimable, ethers.BigNumber.from("500000000000000000"));
+              ).to.be.closeTo(
+                claimable,
+                ethers.BigNumber.from("500000000000000000")
+              );
               expect(await GatherGambit.ownerOf(wolfIndex)).to.equal(
                 contractOwner.address
               );
@@ -616,7 +636,7 @@ describe("Initialization of core functions", function () {
               const claimable = await BerryLands.getClaimableBerries(
                 gathererIndex,
                 1
-              );              
+              );
               const stolen = claimable
                 .mul(BigNumber.from("7"))
                 .div(BigNumber.from("10"));
@@ -625,14 +645,19 @@ describe("Initialization of core functions", function () {
               expect(
                 (await BerryLands.getStakedGatherer(gathererIndex, 1))
                   .claimableBerries
-              ).to.be.closeTo(userCut, ethers.BigNumber.from("500000000000000000"));
+              ).to.be.closeTo(
+                userCut,
+                ethers.BigNumber.from("500000000000000000")
+              );
               expect(
                 await Berries.balanceOf(contractOwner.address)
-              ).to.be.closeTo(stolen, ethers.BigNumber.from("500000000000000000"));
-              expect(await BerryLands.getClaimableBerries(
-                gathererIndex,
-                1
-              )).to.be.below(claimable);
+              ).to.be.closeTo(
+                stolen,
+                ethers.BigNumber.from("500000000000000000")
+              );
+              expect(
+                await BerryLands.getClaimableBerries(gathererIndex, 1)
+              ).to.be.below(claimable);
             });
           });
         });
@@ -647,7 +672,10 @@ describe("Initialization of core functions", function () {
         gathererIndex = 1;
         await mintGatherer();
 
-        await Berries.mint(contractOwner.address, ethers.utils.parseEther('10000'));
+        await Berries.mint(
+          contractOwner.address,
+          ethers.utils.parseEther("10000")
+        );
       });
       it("should be properly initialized", async function () {
         expect(await GatherGambit.getReproductionContract()).to.equal(
@@ -656,26 +684,34 @@ describe("Initialization of core functions", function () {
         expect(await SereneSettlements.getGambitContract()).to.equal(
           GatherGambit.address
         );
-        expect(await SereneSettlements.getBerriesContract()).to.equal(Berries.address);
+        expect(await SereneSettlements.getBerriesContract()).to.equal(
+          Berries.address
+        );
       });
       it("initiateReproduction()", async function () {
         await mintGatherer();
         const gathererIndex1 = gathererIndex.toString();
         ++gathererIndex;
         await mintGatherer();
-        const gathererIndex2 = gathererIndex.toString();        
-        
+        const gathererIndex2 = gathererIndex.toString();
+
         await GatherGambit.approve(SereneSettlements.address, gathererIndex1);
         await GatherGambit.approve(SereneSettlements.address, gathererIndex2);
-        await Berries.approve(SereneSettlements.address, ethers.utils.parseEther('10000'));
-        await SereneSettlements.initiateReproduction([gathererIndex1, gathererIndex2]);
+        await Berries.approve(
+          SereneSettlements.address,
+          ethers.utils.parseEther("10000")
+        );
+        await SereneSettlements.initiateReproduction([
+          gathererIndex1,
+          gathererIndex2,
+        ]);
         expect(await GatherGambit.ownerOf(gathererIndex1)).to.equal(
           SereneSettlements.address
         );
         expect(await GatherGambit.ownerOf(gathererIndex2)).to.equal(
           SereneSettlements.address
         );
-        expect(await Berries.totalSupply()).to.be.equal("0")
+        expect(await Berries.totalSupply()).to.be.equal("0");
       });
     });
   });
