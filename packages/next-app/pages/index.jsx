@@ -13,14 +13,14 @@ import {
 
 import deployedContracts from '@/lib/hardhat_contracts.json';
 
-const Entity = {
+export const Entity = {
   0: 'Unrevealed',
   1: 'Gatherer',
   2: 'Protector',
   3: 'Wolf',
 };
 
-const locationObject = [
+export const locationObject = [
   {
     value: 0,
     label: 'Fertile Field',
@@ -117,7 +117,7 @@ const Home = () => {
   }
 
   return (
-    <div className='mx-auto max-w-2xl space-y-8 p-4'>
+    <div className='mx-auto mb-16 max-w-2xl space-y-8 p-4'>
       {/* Mint GatherGambit */}
       <div>
         <p>Choose you destiny</p>
@@ -168,6 +168,8 @@ const Home = () => {
         </div>
       </div>
       <div>
+        {/* Approve on the GatherGambit */}
+        {/* Enter into berryland  */}
         <div className='ml-8 space-y-4 '>
           <p>Gather in Fertile Land</p>
           <ul className='ml-8 list-disc'>
@@ -205,11 +207,11 @@ const Home = () => {
 
             <button
               onClick={async () => {
-                setBerryLoading(true);
                 if (!gatherTokenId) {
                   toast.error('Please enter Gather token');
                   return;
                 }
+                setBerryLoading(true);
                 try {
                   await (
                     await gatherGambitContract.approve(
@@ -237,13 +239,11 @@ const Home = () => {
                 : `Gather in ${locationObject[location].label}`}
             </button>
           </div>
-
-          {/* Enter into Berry land */}
-          {/* Approve on the GatherGambit */}
-
-          {/* Enter into berryland  */}
         </div>
-        <p>Gather in Whisper Woods</p>
+        {/* Berries */}
+        <div className='mt-8'>
+          <p>Berries</p>
+        </div>
       </div>
     </div>
   );
