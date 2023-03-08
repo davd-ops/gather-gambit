@@ -15,6 +15,10 @@ import deployedContracts from '@/lib/hardhat_contracts.json';
 
 import { setLocalStorageDb, getLocaleStorageDb } from '@/lib/localStorageDb';
 
+import { Press_Start_2P } from 'next/font/google';
+
+const inter = Press_Start_2P({ subsets: ['latin'], weight: ['400'] });
+
 export const CHAIN_ID = '250';
 
 export const Entity = {
@@ -161,7 +165,7 @@ const Home = () => {
   }
 
   return (
-    <div className='mx-auto mb-16 max-w-2xl space-y-16'>
+    <div className={`mx-auto mb-16 max-w-2xl space-y-16 ${inter.className}`}>
       {/* Mint */}
       <div>
         <p>Choose you destiny</p>
@@ -198,7 +202,11 @@ const Home = () => {
                   <div className=''>
                     <Image
                       alt=''
-                      src='/assets/graveyard.png'
+                      src={
+                        loadEntity
+                          ? `/assets/${Entity[loadEntity[index]]}.png`
+                          : '/assets/0.png'
+                      }
                       width={200}
                       height={200}
                       style={{ objectFit: 'cover' }}
