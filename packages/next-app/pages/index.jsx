@@ -1,4 +1,5 @@
 import { readContract } from '@wagmi/core';
+import { Press_Start_2P } from 'next/font/google';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import Select from 'react-select';
@@ -12,10 +13,7 @@ import {
 } from 'wagmi';
 
 import deployedContracts from '@/lib/hardhat_contracts.json';
-
-import { setLocalStorageDb, getLocaleStorageDb } from '@/lib/localStorageDb';
-
-import { Press_Start_2P } from 'next/font/google';
+import { getLocaleStorageDb, setLocalStorageDb } from '@/lib/localStorageDb';
 
 export const inter = Press_Start_2P({ subsets: ['latin'], weight: ['400'] });
 
@@ -105,7 +103,7 @@ const Home = () => {
 
   const {
     data: gatherGambitData,
-    // isError: gatherGambitError,
+    isError: gatherGambitError,
     // isLoading: gatherGambitIsLoading,
   } = useContractRead({
     address: deployedContracts[CHAIN_ID][0].contracts.GatherGambit.address,
@@ -208,8 +206,8 @@ const Home = () => {
                           ? `/assets/${Entity[loadEntity[index]]}.png`
                           : '/assets/0.png'
                       }
-                      width={400}
-                      height={400}
+                      width={250}
+                      height={250}
                       style={{ objectFit: 'cover' }}
                     />
                     <p> tokenId: {parseInt(d)}</p>
@@ -223,7 +221,7 @@ const Home = () => {
 
       {/* My Tokens into Berry lands AKA stakced */}
 
-      <div className='rounded-md bg-red-400 p-4'>
+      <div className='bg-red-250 rounded-md p-4'>
         <p>Stacked Tokens</p>
         {myTokenIds &&
           myTokenIds.map((item, index) => <div key={index}>{item}</div>)}
