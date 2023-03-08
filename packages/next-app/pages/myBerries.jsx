@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 
 import deployedContracts from '@/lib/hardhat_contracts.json';
 
-import { Entity, locationObject } from './index';
+import { Entity, locationObject, CHAIN_ID } from './index';
 import { formatUnits } from 'ethers/lib/utils.js';
 
 const MyBerries = () => {
@@ -29,8 +29,8 @@ const MyBerries = () => {
     // isError: gatherGambitError,
     // isLoading: gatherGambitStakedTokenLoading,
   } = useContractRead({
-    address: deployedContracts[80001][0].contracts.Berries.address,
-    abi: deployedContracts[80001][0].contracts.Berries.abi,
+    address: deployedContracts[CHAIN_ID][0].contracts.Berries.address,
+    abi: deployedContracts[CHAIN_ID][0].contracts.Berries.abi,
     functionName: 'balanceOf',
     args: [address],
   });

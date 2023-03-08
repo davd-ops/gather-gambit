@@ -61,11 +61,16 @@ module.exports = {
       url: process.env.Fantom_Test_RPC_URL,
       accounts: [process.env.Fantom_testnet_PK],
     },
+    fantom: {
+      url: process.env.Fantom_RPC_URL,
+      accounts: [process.env.fantom_Mainnet_PK],
+    },
   },
   etherscan: {
     apiKey: {
       mainnet: process.env.EXPLORER_API_KEY,
       ftmTestnet: process.env.Fantom_scanner,
+      opera: process.env.Fantom_scanner,
     },
   },
 };

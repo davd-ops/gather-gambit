@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 
 import deployedContracts from '@/lib/hardhat_contracts.json';
 
-import { Entity, locationObject } from './index';
+import { Entity, locationObject, CHAIN_ID } from './index';
 
 import { setLocalStorageDb } from '@/lib/localStorageDb';
 
@@ -16,7 +16,6 @@ const GamePlay = () => {
   const [loadEntity, setLoadEntity] = useState();
 
   const [loadingPage, setLoadingPage] = useState(true);
-  
 
   const [tokenId, setTokenId] = useState();
   const [location, setLocation] = useState(0);
@@ -26,12 +25,12 @@ const GamePlay = () => {
   const { address } = useAccount();
 
   const berryLandsAddress =
-    deployedContracts[80001][0].contracts.BerryLands.address;
+    deployedContracts[CHAIN_ID][0].contracts.BerryLands.address;
 
   const getEntity = async (tokenId) => {
     const gatherGambitGetEntityData = await readContract({
-      address: deployedContracts[80001][0].contracts.GatherGambit.address,
-      abi: deployedContracts[80001][0].contracts.GatherGambit.abi,
+      address: deployedContracts[CHAIN_ID][0].contracts.GatherGambit.address,
+      abi: deployedContracts[CHAIN_ID][0].contracts.GatherGambit.abi,
       functionName: 'getEntity',
       args: [tokenId],
     });
@@ -43,13 +42,11 @@ const GamePlay = () => {
     // isError: gatherGambitError,
     isLoading: gatherGambitStakedTokenLoading,
   } = useContractRead({
-    address: deployedContracts[80001][0].contracts.GatherGambit.address,
-    abi: deployedContracts[80001][0].contracts.GatherGambit.abi,
+    address: deployedContracts[CHAIN_ID][0].contracts.GatherGambit.address,
+    abi: deployedContracts[CHAIN_ID][0].contracts.GatherGambit.abi,
     functionName: 'tokensOfOwner',
     args: [berryLandsAddress],
   });
-
-  
 
   useEffect(() => {
     if (!gatherGambitStakedTokenLoading) {
@@ -73,13 +70,13 @@ const GamePlay = () => {
 
   const berrriesLandContract = useContract({
     address: berryLandsAddress,
-    abi: deployedContracts[80001][0].contracts.BerryLands.abi,
+    abi: deployedContracts[CHAIN_ID][0].contracts.BerryLands.abi,
     signerOrProvider: signer,
   });
 
   const gatherGambitContract = useContract({
-    address: deployedContracts[80001][0].contracts.GatherGambit.address,
-    abi: deployedContracts[80001][0].contracts.GatherGambit.abi,
+    address: deployedContracts[CHAIN_ID][0].contracts.GatherGambit.address,
+    abi: deployedContracts[CHAIN_ID][0].contracts.GatherGambit.abi,
     signerOrProvider: signer,
   });
 
@@ -162,8 +159,6 @@ const GamePlay = () => {
             </button>
           </div>
         </div>
-
-       
       </div>
     </div>
   );

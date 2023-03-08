@@ -15,6 +15,8 @@ import deployedContracts from '@/lib/hardhat_contracts.json';
 
 import { setLocalStorageDb, getLocaleStorageDb } from '@/lib/localStorageDb';
 
+export const CHAIN_ID = '250';
+
 export const Entity = {
   0: 'Unrevealed',
   1: 'Gatherer',
@@ -73,8 +75,8 @@ const Home = () => {
   // Events
 
   useContractEvent({
-    address: deployedContracts[80001][0].contracts.GatherGambit.address,
-    abi: deployedContracts[80001][0].contracts.GatherGambit.abi,
+    address: deployedContracts[CHAIN_ID][0].contracts.GatherGambit.address,
+    abi: deployedContracts[CHAIN_ID][0].contracts.GatherGambit.abi,
     eventName: 'Transfer',
     listener(node, label, owner) {
       console.log({ node }, { label }, { owner });
@@ -82,8 +84,8 @@ const Home = () => {
   });
 
   useContractEvent({
-    address: deployedContracts[80001][0].contracts.BerryLands.address,
-    abi: deployedContracts[80001][0].contracts.BerryLands.abi,
+    address: deployedContracts[CHAIN_ID][0].contracts.BerryLands.address,
+    abi: deployedContracts[CHAIN_ID][0].contracts.BerryLands.abi,
     eventName: 'StakedInBerryLands',
     listener(node, label, owner) {
       console.log({ node }, { label }, { owner });
@@ -102,16 +104,16 @@ const Home = () => {
     // isError: gatherGambitError,
     // isLoading: gatherGambitIsLoading,
   } = useContractRead({
-    address: deployedContracts[80001][0].contracts.GatherGambit.address,
-    abi: deployedContracts[80001][0].contracts.GatherGambit.abi,
+    address: deployedContracts[CHAIN_ID][0].contracts.GatherGambit.address,
+    abi: deployedContracts[CHAIN_ID][0].contracts.GatherGambit.abi,
     functionName: 'tokensOfOwner',
     args: [address],
   });
 
   const getEntity = async (tokenId) => {
     const gatherGambitGetEntityData = await readContract({
-      address: deployedContracts[80001][0].contracts.GatherGambit.address,
-      abi: deployedContracts[80001][0].contracts.GatherGambit.abi,
+      address: deployedContracts[CHAIN_ID][0].contracts.GatherGambit.address,
+      abi: deployedContracts[CHAIN_ID][0].contracts.GatherGambit.abi,
       functionName: 'getEntity',
       args: [tokenId],
     });
@@ -121,18 +123,18 @@ const Home = () => {
   // Setters GatherGambit
 
   const gatherGambitContract = useContract({
-    address: deployedContracts[80001][0].contracts.GatherGambit.address,
-    abi: deployedContracts[80001][0].contracts.GatherGambit.abi,
+    address: deployedContracts[CHAIN_ID][0].contracts.GatherGambit.address,
+    abi: deployedContracts[CHAIN_ID][0].contracts.GatherGambit.abi,
     signerOrProvider: signer,
   });
 
   // Setters BerryLands
   const berryLandsAddress =
-    deployedContracts[80001][0].contracts.BerryLands.address;
+    deployedContracts[CHAIN_ID][0].contracts.BerryLands.address;
 
   const berrriesLandContract = useContract({
     address: berryLandsAddress,
-    abi: deployedContracts[80001][0].contracts.BerryLands.abi,
+    abi: deployedContracts[CHAIN_ID][0].contracts.BerryLands.abi,
     signerOrProvider: signer,
   });
 

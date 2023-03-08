@@ -28,6 +28,7 @@ const client = createClient(
     appName: 'ConnectKit',
     alchemyId: process.env.NEXT_PUBLIC_ALCHEMY_ID,
     chains: [
+      fantom,
       polygonMumbai,
       mainnet,
       polygon,
