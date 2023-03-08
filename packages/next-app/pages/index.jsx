@@ -13,6 +13,8 @@ import {
 
 import deployedContracts from '@/lib/hardhat_contracts.json';
 
+import { setLocalStorageDb, getLocaleStorageDb } from '@/lib/localStorageDb';
+
 export const Entity = {
   0: 'Unrevealed',
   1: 'Gatherer',
@@ -34,9 +36,11 @@ export const locationObject = [
 const Home = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [mintLoading, setmintLoading] = useState(false);
+  const [attackLoading, setAttackLoading] = useState(false);
   const [berriesLoading, setBerryLoading] = useState(false);
   const [loadEntity, setLoadEntity] = useState();
   const [gatherTokenId, setGatherTokenId] = useState();
+  const [tokenId, setTokenId] = useState();
   const [location, setLocation] = useState(0);
   const { address } = useAccount();
   const { data: signer } = useSigner();
@@ -117,13 +121,13 @@ const Home = () => {
   }
 
   return (
-    <div className='mx-auto mb-16 max-w-2xl space-y-8 p-4'>
+    <div className='mx-auto mb-16 max-w-2xl'>
       {/* Mint GatherGambit */}
       <div>
         <p>Choose you destiny</p>
         <p>You can be Gather, Protector or Wolf</p>
         <button
-          className='btn mt-4'
+          className='btn-primary btn'
           onClick={async () => {
             setmintLoading(true);
             try {
@@ -139,11 +143,11 @@ const Home = () => {
           {mintLoading ? 'Loading...' : 'Mint'}
         </button>
       </div>
-      {/* Gather */}
+
       {/* Dashboad */}
       <div>
         <p>Dashboard</p>
-        <div className='px-8'>
+        <div className=''>
           <p>My GatherGambit Tokens</p>
           <div className='grid grid-cols-2 gap-2 md:grid-cols-4'>
             {gatherGambitData &&
@@ -154,7 +158,7 @@ const Home = () => {
                   <div className=''>
                     <Image
                       alt=''
-                      src='/assets/background.png'
+                      src='/assets/graveyard.png'
                       width={200}
                       height={200}
                       style={{ objectFit: 'cover' }}
@@ -168,18 +172,18 @@ const Home = () => {
         </div>
       </div>
       <div>
-        {/* Approve on the GatherGambit */}
-        {/* Enter into berryland  */}
-        <div className='ml-8 space-y-4 '>
+        {/* BerryLand */}
+
+        <div className=''>
           <p>Gather in Fertile Land</p>
-          <ul className='ml-8 list-disc'>
+          <ul className='list-disc'>
             <li>Yield: 2000 $BERRY/day</li>
             <li>If caught, gatherer loses all of his berries</li>
             <li>If caught while protected, loses only 40% of his berries</li>
           </ul>
           <hr />
           <p>Whispering Woods</p>
-          <ul className='ml-8 list-disc'>
+          <ul className='list-disc'>
             <li>Yield: 5000 $BERRY/day</li>
             <li>
               If caught, gatherer is killed, wolves steal all of his berries
@@ -205,6 +209,7 @@ const Home = () => {
               onChange={(e) => setGatherTokenId(e.target.value)}
             />
 
+            {/* Apprve and Enter into berryland  */}
             <button
               onClick={async () => {
                 if (!gatherTokenId) {
@@ -240,9 +245,66 @@ const Home = () => {
             </button>
           </div>
         </div>
-        {/* Berries */}
-        <div className='mt-8'>
-          <p>Berries</p>
+      </div>
+
+      {/* Attack */}
+      {/* initiate Attack */}
+      <div className='bg-blue-300'>
+        <p>Attack on Berry lands </p>
+        <p>If you are wolf you can attack gathers for </p>
+        <ul className='list-disc'>
+          <li>Get 40% of his collected $BERRIES if they are protected</li>
+          <li>Get all $BERRIES</li>
+        </ul>
+
+        <Select
+          options={locationObject}
+          defaultValue={locationObject[0]}
+          onChange={(e) => setLocation(e.value)}
+        />
+
+        <div className='grid grid-cols-2 gap-2'>
+          <input
+            type='number'
+            placeholder='Enter token id of wolf'
+            className='input-bordered input-primary input w-full max-w-xs'
+            value={tokenId}
+            onChange={(e) => setTokenId(e.target.value)}
+          />
+
+          <button
+            className='btn-primary btn'
+            onClick={async () => {
+              if (!tokenId) {
+                toast.error('Please enter Wolf token id');
+                return;
+              }
+
+              setAttackLoading(true);
+              try {
+                await (
+                  await gatherGambitContract.approve(berryLandsAddress, tokenId)
+                ).wait();
+
+                await (
+                  await berrriesLandContract.initiateAttack(tokenId, location)
+                ).wait();
+
+                setLocalStorageDb({
+                  tokenId,
+                  address,
+                  event: 'ATTACK',
+                  location: location,
+                });
+                toast.success('Attack initiated successfully');
+              } catch (e) {
+                toast.error(e.message);
+              }
+              setAttackLoading(false);
+            }}
+          >
+            {attackLoading ? 'Loading...' : 'initiateAttack'}
+          </button>
         </div>
       </div>
     </div>
