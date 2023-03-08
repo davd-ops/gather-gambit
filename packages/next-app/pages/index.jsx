@@ -17,7 +17,7 @@ import { setLocalStorageDb, getLocaleStorageDb } from '@/lib/localStorageDb';
 
 import { Press_Start_2P } from 'next/font/google';
 
-const inter = Press_Start_2P({ subsets: ['latin'], weight: ['400'] });
+export const inter = Press_Start_2P({ subsets: ['latin'], weight: ['400'] });
 
 export const CHAIN_ID = '250';
 
@@ -171,7 +171,7 @@ const Home = () => {
         <p>Choose you destiny</p>
         <p>You can be Gather, Protector or Wolf</p>
         <button
-          className='btn-primary btn'
+          className='btn-primary btn mt-4'
           onClick={async () => {
             setmintLoading(true);
             try {
@@ -191,7 +191,8 @@ const Home = () => {
       {/* Dashboad */}
       <div>
         <p>Dashboard</p>
-        <div className=''>
+        <hr />
+        <div className='mt-2'>
           <p>My GatherGambit Tokens</p>
           <div className='grid grid-cols-2 gap-2 md:grid-cols-4'>
             {gatherGambitData &&
@@ -207,8 +208,8 @@ const Home = () => {
                           ? `/assets/${Entity[loadEntity[index]]}.png`
                           : '/assets/0.png'
                       }
-                      width={200}
-                      height={200}
+                      width={400}
+                      height={400}
                       style={{ objectFit: 'cover' }}
                     />
                     <p> tokenId: {parseInt(d)}</p>
@@ -222,7 +223,7 @@ const Home = () => {
 
       {/* My Tokens into Berry lands AKA stakced */}
 
-      <div className='bg-red-500'>
+      <div className='rounded-md bg-red-400 p-4'>
         <p>Stacked Tokens</p>
         {myTokenIds &&
           myTokenIds.map((item, index) => <div key={index}>{item}</div>)}
@@ -230,7 +231,7 @@ const Home = () => {
 
       {/* BerryLand */}
       <div>
-        <div className=''>
+        <div className='space-y-8'>
           <p>Gather in Fertile Land</p>
           <ul className='list-disc'>
             <li>Yield: 2000 $BERRY/day</li>
@@ -304,7 +305,7 @@ const Home = () => {
       </div>
 
       {/* initiate Attack */}
-      <div className='bg-blue-300'>
+      <div className='space-y-4  rounded-md bg-blue-300 p-8'>
         <p>Attack on Berry lands </p>
         <p>If you are wolf you can attack gathers for </p>
         <ul className='list-disc'>
@@ -364,7 +365,7 @@ const Home = () => {
       </div>
 
       {/* Add Protector */}
-      <div className='bg-red-300'>
+      <div className='space-y-4 rounded-md  bg-red-300 p-8'>
         <p>Protect your Destiny </p>
 
         <input
@@ -432,7 +433,7 @@ const Home = () => {
       {/*  Remove Protector */}
       {/* uint256 _gathererId, Location _location */}
 
-      <div className='bg-yellow-300'>
+      <div className='space-y-4 rounded-md  bg-yellow-300 p-8'>
         <p>Remove Protector</p>
         <p>If you are wolf you can attack gathers for </p>
         <ul className='list-disc'>
@@ -446,7 +447,7 @@ const Home = () => {
           onChange={(e) => setLocation(e.value)}
         />
 
-        <div className='flex flex-col'>
+        <div className='flex flex-col space-y-4'>
           <input
             type='number'
             placeholder='Enter token id of Gather from which you want to remove protecter'
@@ -493,7 +494,7 @@ const Home = () => {
        * @param _tokenId The token ID of the attacking Wolf.
        */}
 
-      <div className='bg-green-300'>
+      <div className='space-y-4 rounded-md  bg-green-300 p-8'>
         <p>Resolve Attack </p>
         <p>If you are wolf you can attack gathers for </p>
         <ul className='list-disc'>
@@ -501,11 +502,11 @@ const Home = () => {
           <li>Get all $BERRIES</li>
         </ul>
 
-        <div className='grid grid-cols-2 gap-2'>
+        <div className='flex flex-col space-y-4'>
           <input
             type='number'
             placeholder='Enter wolf id of wolf'
-            className='input-bordered input-primary input w-full max-w-xs'
+            className='input'
             value={wolfTokenId}
             onChange={(e) => setWolfTokenId(e.target.value)}
           />

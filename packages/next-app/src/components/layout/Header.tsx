@@ -4,27 +4,13 @@ import ButtonLink from '../links/ButtonLink';
 
 export default function Header() {
   return (
-    <header className='sticky top-0 z-50 p-8'>
-      <div className='layout flex items-center justify-between'>
-        <ButtonLink href='/'>Home</ButtonLink>
-        <ButtonLink href='/gameplay'>Game Play</ButtonLink>
-        <ButtonLink href='/myBerries'>Berries</ButtonLink>
-
-        <nav>
-          <ul className='flex items-center justify-between space-x-4'>
-            <div
-              style={{
-                display: 'flex',
-                padding: '25px',
-                zIndex: 1000,
-                justifyContent: 'right',
-              }}
-            >
-              <ConnectKitButton />
-            </div>
-          </ul>
-        </nav>
-      </div>
-    </header>
+    <div className='mx-auto my-8 grid max-w-3xl grid-cols-4 space-x-16'>
+      <ButtonLink className='' href='/'>
+        Home
+      </ButtonLink>
+      <ButtonLink href='/gameplay'>Game Play</ButtonLink>
+      <ButtonLink href='/myBerries'>Berries</ButtonLink>
+      <ConnectKitButton />
+    </div>
   );
 }

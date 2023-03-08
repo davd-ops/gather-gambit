@@ -12,6 +12,8 @@ import { Entity, locationObject, CHAIN_ID } from './index';
 
 import { setLocalStorageDb } from '@/lib/localStorageDb';
 
+import { inter } from './index';
+
 const GamePlay = () => {
   const [loadEntity, setLoadEntity] = useState();
 
@@ -87,8 +89,8 @@ const GamePlay = () => {
   }
 
   return (
-    <div>
-      <p className='text-center text-xl'>GamePlay</p>
+    <div className={`${inter.className}`}>
+      <p className='space-y-4 rounded-md p-8  text-center text-xl'>GamePlay</p>
       <div className='mt-8 grid grid-cols-2 place-items-center gap-2 md:grid-cols-4'>
         {!loadingPage ? (
           <p>Loading.........</p>
@@ -99,7 +101,11 @@ const GamePlay = () => {
               <div className=''>
                 <Image
                   alt=''
-                  src='/assets/background.png'
+                  src={
+                    loadEntity
+                      ? `/assets/${Entity[loadEntity[index]]}.png`
+                      : '/assets/0.png'
+                  }
                   width={200}
                   height={200}
                   style={{ objectFit: 'cover' }}
@@ -113,38 +119,30 @@ const GamePlay = () => {
       </div>
 
       {/* Exit Berry Land */}
-      <div className='mx-auto mt-8 max-w-2xl '>
+      <div className='mx-auto max-w-2xl text-center '>
         <p>Exit Berry land and claim your tasty berries </p>
 
-        <div className='mx-auto max-w-lg'>
+        <div className='mx-auto mt-4 max-w-lg'>
           <Select
             options={locationObject}
             defaultValue={locationObject[0]}
             onChange={(e) => setLocation(e.value)}
           />
 
-          <div className='grid grid-cols-2 gap-2'>
+          <div className='mt-4 flex flex-col space-y-4'>
             <input
               type='number'
               placeholder='Enter Gather token id'
-              className='input-bordered input-primary input w-full max-w-xs'
+              className='input-bordered input-primary input'
               value={tokenId}
               onChange={(e) => setTokenId(e.target.value)}
             />
 
             <button
-              className='btn-secondary btn'
+              className='btn-primary btn'
               onClick={async () => {
                 try {
-                  // await (
-                  //   await gatherGambitContract.approve(
-                  //     berryLandsAddress,
-                  //     tokenId
-                  //   )
-                  // ).wait();
-
                   toast.success(tokenId, location);
-
                   await (
                     await berrriesLandContract.exitBerryLands(tokenId, 0)
                   ).wait();

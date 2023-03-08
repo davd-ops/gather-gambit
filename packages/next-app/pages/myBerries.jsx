@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 
 import deployedContracts from '@/lib/hardhat_contracts.json';
 
-import { Entity, locationObject, CHAIN_ID } from './index';
+import { Entity, locationObject, CHAIN_ID, inter } from './index';
 import { formatUnits } from 'ethers/lib/utils.js';
 
 const MyBerries = () => {
@@ -44,7 +44,7 @@ const MyBerries = () => {
   }
 
   return (
-    <div>
+    <div className={`${inter.className} text-center text-xl`}>
       Claimed Berries - {berries ? formatUnits(berries, 18) : 'No Berries'}{' '}
       $Berries
     </div>
