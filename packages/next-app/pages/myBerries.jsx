@@ -43,7 +43,12 @@ const MyBerries = () => {
     );
   }
 
-  return <div>Claimed Berries - {formatUnits(berries, 18)} $Berries</div>;
+  return (
+    <div>
+      Claimed Berries - {berries ? formatUnits(berries, 18) : 'No Berries'}{' '}
+      $Berries
+    </div>
+  );
 };
 
 export default MyBerries;

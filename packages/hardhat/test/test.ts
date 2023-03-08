@@ -159,13 +159,23 @@ describe("Initialization of core functions", function () {
         );
         // await GatherGambit.mint(contractOwner.address);
 
-        for (let i = 1; i <= 5000; i++) {
+        let a = 0;
+        let b = 0;
+        let c = 0;
+
+        for (let i = 1; i <= 500; i++) {
           await GatherGambit.mint(contractOwner.address);
+          await mine(55);
+          await GatherGambit.resolveEpochIfNecessary();
           let e = await GatherGambit.getEntity(i);
+          if (e == 1) a++;
+          if (e == 2) b++;
+          if (e == 3) c++;
           console.log(i, "-", e);
         }
+        console.log(a, b, c);
         expect(await GatherGambit.balanceOf(contractOwner.address)).to.equal(
-          BigNumber.from("10")
+          BigNumber.from("500")
         );
       });
       it("burn()", async function () {

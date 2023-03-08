@@ -40,10 +40,19 @@ const Home = () => {
   const [berriesLoading, setBerryLoading] = useState(false);
   const [loadEntity, setLoadEntity] = useState();
   const [gatherTokenId, setGatherTokenId] = useState();
+
+  const [myTokenIds, setMyTokenIds] = useState();
+
+  const [gatherTokenToPotectId, setGatherTokenToPotectId] = useState();
+
   const [tokenId, setTokenId] = useState();
   const [location, setLocation] = useState(0);
   const { address } = useAccount();
   const { data: signer } = useSigner();
+
+  const [protectLoading, setProtectLoading] = useState(false);
+  const [protectorTokenId, setProtectorTokenId] = useState();
+  const [wolfTokenId, setWolfTokenId] = useState();
 
   useEffect(() => {
     if (address) {
@@ -58,9 +67,23 @@ const Home = () => {
   useContractEvent({
     address: deployedContracts[80001][0].contracts.GatherGambit.address,
     abi: deployedContracts[80001][0].contracts.GatherGambit.abi,
-    eventName: 'NewEpoch',
+    eventName: 'Transfer',
     listener(node, label, owner) {
-      console.log(node, label, owner);
+      console.log({ node }, { label }, { owner });
+    },
+  });
+
+  useContractEvent({
+    address: deployedContracts[80001][0].contracts.BerryLands.address,
+    abi: deployedContracts[80001][0].contracts.BerryLands.abi,
+    eventName: 'StakedInBerryLands',
+    listener(node, label, owner) {
+      console.log({ node }, { label }, { owner });
+      setLocalStorageDb({
+        tokenId: parseInt(owner),
+        address,
+        event: 'STACKED',
+      });
     },
   });
 
@@ -114,6 +137,13 @@ const Home = () => {
       });
   }, [gatherGambitData]);
 
+  useEffect(() => {
+    const items = getLocaleStorageDb({ event: 'STACKED' });
+    if (items) setMyTokenIds(items);
+  }, []);
+
+  console.log({ myTokenIds });
+
   if (!isLoggedIn) {
     return (
       <p className='text-center'>Loading.... Please connect your wallet</p>
@@ -121,8 +151,8 @@ const Home = () => {
   }
 
   return (
-    <div className='mx-auto mb-16 max-w-2xl'>
-      {/* Mint GatherGambit */}
+    <div className='mx-auto mb-16 max-w-2xl space-y-16'>
+      {/* Mint */}
       <div>
         <p>Choose you destiny</p>
         <p>You can be Gather, Protector or Wolf</p>
@@ -171,6 +201,15 @@ const Home = () => {
           </div>
         </div>
       </div>
+
+      {/* My Tokens into Berry lands AKA stakced */}
+
+      <div className='bg-red-500'>
+        <p>Stacked Tokens</p>
+        {myTokenIds &&
+          myTokenIds.map((item, index) => <div key={index}>{item}</div>)}
+      </div>
+
       <div>
         {/* BerryLand */}
 
@@ -306,6 +345,72 @@ const Home = () => {
             {attackLoading ? 'Loading...' : 'initiateAttack'}
           </button>
         </div>
+      </div>
+
+      {/* Protector */}
+      <div className='bg-red-300'>
+        <p>Protect your Destiny </p>
+
+        <input
+          type='number'
+          placeholder='protectoer id'
+          className='input-primary input w-full max-w-xs'
+          value={protectorTokenId}
+          onChange={(e) => setProtectorTokenId(e.target.value)}
+        />
+
+        <input
+          type='number'
+          placeholder='gather token you want to protect'
+          className='input-bordered input-primary input w-full max-w-xs'
+          value={gatherTokenToPotectId}
+          onChange={(e) => setGatherTokenToPotectId(e.target.value)}
+        />
+
+        <Select
+          options={locationObject}
+          defaultValue={locationObject[0]}
+          onChange={(e) => setLocation(e.value)}
+        />
+        <button
+          className='btn-primary btn'
+          onClick={async () => {
+            if (!tokenId) {
+              toast.error('Please enter Wolf token id');
+              return;
+            }
+            setProtectLoading(true);
+            try {
+              await (
+                await gatherGambitContract.approve(
+                  berryLandsAddress,
+                  protectorTokenId
+                )
+              ).wait();
+
+              await (
+                await berrriesLandContract.addProtector(
+                  protectorTokenId,
+                  gatherTokenId,
+                  location
+                )
+              ).wait();
+
+              setLocalStorageDb({
+                tokenId,
+                address,
+                event: 'PROTECT',
+                location: location,
+              });
+              toast.success('Attack initiated successfully');
+            } catch (e) {
+              toast.error(e.message);
+            }
+            setProtectLoading(false);
+          }}
+        >
+          {protectLoading ? 'Loading...' : 'Protect'}
+        </button>
       </div>
     </div>
   );

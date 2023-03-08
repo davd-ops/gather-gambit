@@ -25,7 +25,17 @@
 //   return items[0];
 // };
 
-export const setLocalStorageDb = ({ tokenId, address, event, location }) => {
+export const setLocalStorageDb = ({
+  tokenId,
+  address,
+  event,
+  location,
+  arr,
+} = {}) => {
+  if (arr) {
+    let items = getLocaleStorageDb({ event: event });
+    if (items) localStorage.setItem(event, JSON.stringify([...items, ...arr]));
+  }
   let items = JSON.parse(localStorage.getItem(event));
   let newItems = {
     tokenId,
@@ -40,8 +50,8 @@ export const setLocalStorageDb = ({ tokenId, address, event, location }) => {
   }
 };
 
-export const getLocaleStorageDb = ({ address, event }) => {
+export const getLocaleStorageDb = ({ event } = {}) => {
   let items = JSON.parse(localStorage.getItem(event));
   if (!items) return;
-  return items.filter((item) => item.address === address);
+  return items;
 };

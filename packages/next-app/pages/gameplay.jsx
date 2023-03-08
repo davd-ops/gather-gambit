@@ -10,10 +10,13 @@ import deployedContracts from '@/lib/hardhat_contracts.json';
 
 import { Entity, locationObject } from './index';
 
+import { setLocalStorageDb } from '@/lib/localStorageDb';
+
 const GamePlay = () => {
   const [loadEntity, setLoadEntity] = useState();
 
   const [loadingPage, setLoadingPage] = useState(true);
+  
 
   const [tokenId, setTokenId] = useState();
   const [location, setLocation] = useState(0);
@@ -21,14 +24,6 @@ const GamePlay = () => {
   const { data: signer } = useSigner();
 
   const { address } = useAccount();
-
-  useEffect(() => {
-    if (address) {
-      setLoadingPage(true);
-    } else {
-      setLoadingPage(false);
-    }
-  }, [address]);
 
   const berryLandsAddress =
     deployedContracts[80001][0].contracts.BerryLands.address;
@@ -53,6 +48,16 @@ const GamePlay = () => {
     functionName: 'tokensOfOwner',
     args: [berryLandsAddress],
   });
+
+  
+
+  useEffect(() => {
+    if (!gatherGambitStakedTokenLoading) {
+      setLoadingPage(true);
+    } else {
+      setLoadingPage(false);
+    }
+  }, [gatherGambitStakedTokenLoading]);
 
   useEffect(() => {
     gatherGambitStakedTokenData &&
@@ -88,7 +93,10 @@ const GamePlay = () => {
     <div>
       <p className='text-center text-xl'>GamePlay</p>
       <div className='mt-8 grid grid-cols-2 place-items-center gap-2 md:grid-cols-4'>
-        {gatherGambitStakedTokenData &&
+        {!loadingPage ? (
+          <p>Loading.........</p>
+        ) : (
+          gatherGambitStakedTokenData &&
           gatherGambitStakedTokenData.map((d, index) => (
             <div key={index}>
               <div className=''>
@@ -103,14 +111,15 @@ const GamePlay = () => {
                 <p> Entity: {loadEntity && Entity[loadEntity[index]]}</p>
               </div>
             </div>
-          ))}
+          ))
+        )}
       </div>
 
       {/* Exit Berry Land */}
       <div className='mx-auto mt-8 max-w-2xl '>
         <p>Exit Berry land and claim your tasty berries </p>
 
-        <div className='mx-auto max-w-lg space-y-8 p-2'>
+        <div className='mx-auto max-w-lg'>
           <Select
             options={locationObject}
             defaultValue={locationObject[0]}
@@ -153,6 +162,8 @@ const GamePlay = () => {
             </button>
           </div>
         </div>
+
+       
       </div>
     </div>
   );
