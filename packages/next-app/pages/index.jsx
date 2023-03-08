@@ -194,7 +194,7 @@ const Home = () => {
         <hr />
         <div className='mt-2'>
           <p>My GatherGambit Tokens</p>
-          <div className='grid grid-cols-2 gap-2 md:grid-cols-4'>
+          <div className='grid grid-cols-2 gap-2 md:grid-cols-2'>
             {gatherGambitData &&
               // <pre>{JSON.stringify(gatherGambitData, null, 2)}</pre>
               gatherGambitData.map((d, index) => (
