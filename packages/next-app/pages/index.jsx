@@ -40,19 +40,27 @@ const Home = () => {
   const [berriesLoading, setBerryLoading] = useState(false);
   const [loadEntity, setLoadEntity] = useState();
   const [gatherTokenId, setGatherTokenId] = useState();
-
   const [myTokenIds, setMyTokenIds] = useState();
-
   const [gatherTokenToPotectId, setGatherTokenToPotectId] = useState();
+  const [gatherTokenToPotectLoading, setGatherTokenToPotectLoading] =
+    useState(false);
+
+  const [wolfTokenId, setWolfTokenId] = useState();
+  const [wolfTokenLoading, setWolfTokenLoading] = useState(false);
 
   const [tokenId, setTokenId] = useState();
   const [location, setLocation] = useState(0);
+
   const { address } = useAccount();
+
   const { data: signer } = useSigner();
 
   const [protectLoading, setProtectLoading] = useState(false);
   const [protectorTokenId, setProtectorTokenId] = useState();
-  const [wolfTokenId, setWolfTokenId] = useState();
+  const [
+    gatherTokenIdFromProtectorRemove,
+    setGatherTokenIdFromProtectorRemove,
+  ] = useState();
 
   useEffect(() => {
     if (address) {
@@ -210,9 +218,8 @@ const Home = () => {
           myTokenIds.map((item, index) => <div key={index}>{item}</div>)}
       </div>
 
+      {/* BerryLand */}
       <div>
-        {/* BerryLand */}
-
         <div className=''>
           <p>Gather in Fertile Land</p>
           <ul className='list-disc'>
@@ -286,7 +293,6 @@ const Home = () => {
         </div>
       </div>
 
-      {/* Attack */}
       {/* initiate Attack */}
       <div className='bg-blue-300'>
         <p>Attack on Berry lands </p>
@@ -347,7 +353,7 @@ const Home = () => {
         </div>
       </div>
 
-      {/* Protector */}
+      {/* Add Protector */}
       <div className='bg-red-300'>
         <p>Protect your Destiny </p>
 
@@ -411,6 +417,113 @@ const Home = () => {
         >
           {protectLoading ? 'Loading...' : 'Protect'}
         </button>
+      </div>
+
+      {/*  Remove Protector */}
+      {/* uint256 _gathererId, Location _location */}
+
+      <div className='bg-yellow-300'>
+        <p>Remove Protector</p>
+        <p>If you are wolf you can attack gathers for </p>
+        <ul className='list-disc'>
+          <li>Get 40% of his collected $BERRIES if they are protected</li>
+          <li>Get all $BERRIES</li>
+        </ul>
+
+        <Select
+          options={locationObject}
+          defaultValue={locationObject[0]}
+          onChange={(e) => setLocation(e.value)}
+        />
+
+        <div className='flex flex-col'>
+          <input
+            type='number'
+            placeholder='Enter token id of Gather from which you want to remove protecter'
+            className='input'
+            value={gatherTokenIdFromProtectorRemove}
+            onChange={(e) =>
+              setGatherTokenIdFromProtectorRemove(e.target.value)
+            }
+          />
+
+          <button
+            className='btn-primary btn'
+            onClick={async () => {
+              if (!gatherTokenIdFromProtectorRemove) {
+                toast.error('Please enter Gather token id');
+                return;
+              }
+
+              setGatherTokenToPotectLoading(true);
+              try {
+                await (
+                  await berrriesLandContract.removeProtector(
+                    gatherTokenIdFromProtectorRemove,
+                    location
+                  )
+                ).wait();
+
+                toast.success('Remove Protector successfully');
+              } catch (e) {
+                toast.error(e.message);
+              }
+              setGatherTokenToPotectLoading(false);
+            }}
+          >
+            {gatherTokenToPotectLoading ? 'Loading...' : 'Remove Protector'}
+          </button>
+        </div>
+      </div>
+
+      {/* resolveAttack */}
+
+      {/*
+       * @notice Resolves an attack.
+       * @param _tokenId The token ID of the attacking Wolf.
+       */}
+
+      <div className='bg-green-300'>
+        <p>Resolve Attack </p>
+        <p>If you are wolf you can attack gathers for </p>
+        <ul className='list-disc'>
+          <li>Get 40% of his collected $BERRIES if they are protected</li>
+          <li>Get all $BERRIES</li>
+        </ul>
+
+        <div className='grid grid-cols-2 gap-2'>
+          <input
+            type='number'
+            placeholder='Enter wolf id of wolf'
+            className='input-bordered input-primary input w-full max-w-xs'
+            value={wolfTokenId}
+            onChange={(e) => setWolfTokenId(e.target.value)}
+          />
+
+          <button
+            className='btn-primary btn'
+            onClick={async () => {
+              if (!wolfTokenId) {
+                toast.error('Please enter Wolf token id');
+                return;
+              }
+
+              setWolfTokenLoading(true);
+              try {
+                await (
+                  await berrriesLandContract.resolveAttack(wolfTokenId)
+                ).wait();
+
+                toast.success('Attack Resolved successfully');
+              } catch (e) {
+                toast.error(e.message);
+              }
+              setWolfTokenLoading(false);
+            }}
+          >
+            {wolfTokenLoading ? 'Loading...' : 'initiateAttack'}
+          </button>
+        </div>
       </div>
     </div>
   );
