@@ -7,6 +7,8 @@ import UnstyledLink, {
   UnstyledLinkProps,
 } from '@/components/links/UnstyledLink';
 
+import { inter } from '../../../pages/index';
+
 const ButtonLinkVariant = [
   'primary',
   'outline',
@@ -115,7 +117,7 @@ const ButtonLink = React.forwardRef<HTMLAnchorElement, ButtonLinkProps>(
             />
           </div>
         )}
-        {children}
+        <span className={` ${inter.className}`}>{children}</span>
         {RightIcon && (
           <div
             className={clsxm([

@@ -1,5 +1,4 @@
 import { ConnectKitButton } from 'connectkit';
-
 import * as React from 'react';
 
 import ButtonLink from '../links/ButtonLink';
@@ -12,9 +11,7 @@ export default function Header() {
       </ButtonLink>
       <ButtonLink href='/gameplay'>Game Play</ButtonLink>
       <ButtonLink href='/myBerries'>Berries</ButtonLink>
-      <ButtonLink href='/assets/FantomHackaton.png'>
-        Our Game play theory
-      </ButtonLink>
+      <ButtonLink href='/assets/FantomHackaton.png'>Game Theory</ButtonLink>
       <ButtonLink href='https://github.com/davd-ops/gather-gambit'>
         Github{' '}
       </ButtonLink>
